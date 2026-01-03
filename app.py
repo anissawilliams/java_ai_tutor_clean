@@ -38,7 +38,7 @@ from characters import get_all_character_names
 from content.survey import render_survey, validate_survey_complete
 import tutor_flow.flow_manager
 from tutor_flow.steps import ScaffoldStep
-from __delete_later.visuals import get_topic_visual
+
 
 # Admin
 from utils.data_export import render_admin_export
