@@ -75,7 +75,7 @@ def set_session(user_data: dict):
     st.session_state["logged_in"] = True
     st.session_state["id_token"] = user_data["idToken"]
     st.session_state["refresh_token"] = user_data["refreshToken"]
-    st.session_state["uid"] = user_data["localId"]
+    st.session_state["user_id"] = user_data["localId"]
     st.session_state["email"] = user_data.get("email")
 
 
@@ -113,22 +113,3 @@ def get_user_data(uid: str):
         return None
 
 
-# ---------------------------------------------------------
-# Login UI
-# ---------------------------------------------------------
-
-def render_login_page():
-    """Render a simple login form."""
-    st.title("Login")
-
-    email = st.text_input("Email")
-    password = st.text_input("Password", type="password")
-
-    if st.button("Log In"):
-        try:
-            user_data = firebase_login(email, password)
-            set_session(user_data)
-            st.success("Logged in successfully")
-            st.experimental_rerun()
-        except ValueError as e:
-            st.error(f"Login failed: {e}")
