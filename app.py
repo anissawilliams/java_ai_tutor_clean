@@ -81,6 +81,15 @@ def initialize_session_state():
         st.session_state.survey_responses = {}
 
 
+
+initialize_session_state()
+
+if not st.session_state.get("logged_in"):
+    render_login_page()
+    st.stop()
+
+require_auth()
+
 def render_dashboard():
     """Render the main dashboard showing session progress."""
     # Check if user is admin
@@ -619,11 +628,17 @@ def main():
     )
     
     initialize_session_state()
-    
-    # Check authentication
-    if not require_auth():
+
+    # LOGIN GATE
+    if not st.session_state.get("logged_in"):
         render_login_page()
-        return
+        st.stop()
+
+    require_auth()
+    # Check authentication
+    # if not require_auth():
+    #     render_login_page()
+    #     return
     
     # Show admin export if URL parameter
     if st.query_params.get("admin") == "true":
