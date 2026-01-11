@@ -26,23 +26,28 @@ class SimpleAIClient:
         self.client = OpenAI(api_key=api_key)
         self.model = "gpt-4o-mini"  # or whatever you prefer
 
-    def chat(self, user_message: str, history: Optional[List[Dict]] = None,
-             temperature: float = 0.7) -> str:
+    def generate_response(self, system_prompt: str, user_message: str,
+                          conversation_history: Optional[List[Dict]] = None,
+                          temperature: float = 0.7) -> str:
         """
-        Send a message to the model with optional history.
-        No system prompt. No guidance. No scaffolding.
+        Generate a response with custom system prompt and conversation history.
         """
-
         messages = []
 
-        # Add history if provided
-        if history:
-            messages.extend(history)
+        # Add system prompt
+        messages.append({"role": "system", "content": system_prompt})
+
+        # Add conversation history if provided
+        if conversation_history:
+            messages.extend(conversation_history)
 
         # Add the new user message
         messages.append({"role": "user", "content": user_message})
 
         try:
+            print(f"DEBUG: Sending {len(messages)} messages to API")
+            print(f"DEBUG: User message: {user_message}")
+
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
@@ -50,7 +55,11 @@ class SimpleAIClient:
                 max_tokens=500
             )
 
+            print(f"DEBUG: Got response: {response.choices[0].message.content[:100]}")
             return response.choices[0].message.content.strip()
 
         except Exception as e:
-            raise Exception(f"OpenAI API call failed: {str(e)}")
+            print(f"ERROR in generate_response: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+            raise  # Re-raise so the handler catches it
