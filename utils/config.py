@@ -72,7 +72,8 @@ EXPORT_INCLUDE = [
 ]
 
 # UI Settings
-SHOW_DEBUG_INFO = False  # Set to True for testing, False for production
+SHOW_DEBUG_INFO = True  # Set to True for testing, False for production
+SHOW_SKIP_BUTTONS = True  # Set to True to enable "Skip to Quiz" button
 REQUIRE_EMAIL_VERIFICATION = False  # Set to True if using email verification
 ALLOW_MULTIPLE_ATTEMPTS = False  # Students can only do each session once
 

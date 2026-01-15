@@ -139,7 +139,20 @@ def render_admin_dashboard():
         return
     
     st.success(f"Testing as Condition {st.session_state.admin_test_condition}")
-    
+
+    from utils.config import SHOW_DEBUG_INFO
+    if st.session_state.get('is_admin_test', False) or SHOW_DEBUG_INFO:
+        st.write("---")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("⏭️ Skip to Quiz (Testing)", type="secondary"):
+                st.session_state.phase = 'quiz'
+                st.rerun()
+        with col2:
+            if st.button("🔍 View Firebase Data", type="secondary"):
+                st.query_params.update({"debug": "true"})
+                st.rerun()
+
     # Show sessions
     for session_key in ['session_1', 'session_2']:
         session_config = SESSIONS[session_key]
