@@ -86,19 +86,19 @@ def handle_user_message_scaffolded(user_input: str):
                 flow.current_step.value
             )
 
-        # Show visual at CODE_STRUCTURE
-        if flow.current_step == ScaffoldStep.CODE_STRUCTURE:
-            visual = get_topic_visual(st.session_state.current_session_id)
-            flow.add_message("assistant", f"📊 **Visual Diagram:**\n{visual}")
-
-            if not st.session_state.get("is_admin_test", False):
-                save_message(
-                    st.session_state.user_id,
-                    session_id,
-                    "assistant",
-                    f"📊 **Visual Diagram:**\n{visual}",
-                    step=flow.current_step.value,
-                )
+        # # Show visual at CODE_STRUCTURE
+        # if flow.current_step == ScaffoldStep.CODE_STRUCTURE:
+        #     visual = get_topic_visual(st.session_state.current_session_id)
+        #     flow.add_message("assistant", f"📊 **Visual Diagram:**\n{visual}")
+        #
+        #     if not st.session_state.get("is_admin_test", False):
+        #         save_message(
+        #             st.session_state.user_id,
+        #             session_id,
+        #             "assistant",
+        #             f"📊 **Visual Diagram:**\n{visual}",
+        #             step=flow.current_step.value,
+        #         )
 
     # Build system prompt
     if condition == 1:
