@@ -95,6 +95,12 @@ ARRAYLIST_TOPIC = ResearchTopic(
             "2. Pivot to the conflict: {agent_crisis}\n"
             "3. Ask: 'Are you ready to see how Java code handles this crisis?'"
         ),
+        "visual_diagram": (
+            "1. Show a diagram of an ArrayList with 4 slots and 4 items.\n"
+            "2. Ask: 'What happens if we add a 5th element?'\n"
+            "3. Show the diagram with a 5th slot and 5th item."
+
+        ),
         "code_structure": (
             "1. Present a MANUAL dynamic array implementation (not the built-in ArrayList).\n"
             "2. Emphasize the 'Hidden Work': {code_focus}\n"

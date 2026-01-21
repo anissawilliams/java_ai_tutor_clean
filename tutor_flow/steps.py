@@ -11,6 +11,7 @@ class ScaffoldStep(Enum):
     """Stages of the pedagogical scaffold."""
     INITIAL_METAPHOR = "initial_metaphor"
     STUDENT_METAPHOR = "student_metaphor"
+    VISUAL_DIAGRAM = "visual_diagram"
     CODE_STRUCTURE = "code_structure"
     CODE_USAGE = "code_usage"
     PRACTICE = "practice"

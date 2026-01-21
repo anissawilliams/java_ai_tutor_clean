@@ -5,14 +5,16 @@ import streamlit as st
 
 from content.research_topics import get_research_topic
 from tutor_flow.flow_manager import TutorFlow
-from tutor_flow.handlers import generate_initial_message
+# Lazy import to avoid circular dependency
+# from tutor_flow.handlers import generate_initial_message
 from utils.database import save_session_start, save_message
 from client.ai_client import SimpleAIClient
 
 
 def start_session(session_id: str):
     """Initialize a learning session."""
-
+    from tutor_flow.handlers import generate_initial_message
+    
     topic = get_research_topic(session_id)
     condition = st.session_state.condition
 
@@ -20,9 +22,8 @@ def start_session(session_id: str):
     st.session_state.ai_client = SimpleAIClient()
     st.session_state.current_session_id = session_id
 
-    # Save session start (unless admin test)
-    if not st.session_state.get("is_admin_test", False):
-        save_session_start(st.session_state.user_id, session_id, condition)
+    # Save session start to database
+    save_session_start(st.session_state.user_id, session_id, condition)
 
     # ---------------------------------------------------------
     # CONDITION 1 & 2 — SCAFFOLDED
@@ -60,5 +61,4 @@ def start_session(session_id: str):
             "timestamp": time.time(),
         })
 
-        if not st.session_state.get("is_admin_test", False):
-            save_message(st.session_state.user_id, session_id, "assistant", welcome)
+        save_message(st.session_state.user_id, session_id, "assistant", welcome)
