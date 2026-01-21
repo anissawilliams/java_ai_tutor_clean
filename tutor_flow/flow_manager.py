@@ -18,6 +18,7 @@ class TutorFlow:
         self.character_name: str = character_name
         self.current_step: ScaffoldStep = ScaffoldStep.INITIAL_METAPHOR
         self.messages: List[ConversationMessage] = []
+        self.step_message_count: int = 0  # Track messages at current step
 
     # -------- Message management --------
 
@@ -29,6 +30,10 @@ class TutorFlow:
             step=self.current_step,
         )
         self.messages.append(msg)
+        
+        # Increment counter for assistant messages
+        if role == "assistant":
+            self.step_message_count += 1
 
     def get_recent_context(self, n: int = 5) -> List[ConversationMessage]:
         """Return the last n messages for prompt context."""
@@ -40,40 +45,71 @@ class TutorFlow:
 
     def should_advance_step(self, user_message: str) -> bool:
         """
-        Decide whether to move to the next scaffold step based on the
-        student's latest message.
+        Decide whether to move to the next scaffold step.
+        Balanced: accepts natural student responses but avoids premature advancement.
+        Also considers context from previous tutor message.
         """
-        user_lower = user_message.lower()
+        user_lower = user_message.lower().strip()
+        word_count = len(user_message.split())
+        
+        # Get last tutor message for context
+        last_tutor_msg = ""
+        for msg in reversed(self.messages):
+            if msg.role == "assistant":
+                last_tutor_msg = msg.content.lower()
+                break
 
         if self.current_step == ScaffoldStep.INITIAL_METAPHOR:
-            # Move on once they give a reasonably substantive metaphor/response
-            return len(user_message.strip()) > 15
+            # Move on once they give substantive metaphor (15+ chars, 3+ words)
+            return len(user_message.strip()) > 15 and word_count >= 3
 
         if self.current_step == ScaffoldStep.STUDENT_METAPHOR:
-            # Only advance when they explicitly signal readiness
-            ready_terms = ["ready", "go", "show me", "yes", "ok", "okay",
-                           "understand", "yep", "yeah"]
-            return any(term in user_lower for term in ready_terms)
+            # If tutor asked "ready to see", accept any affirmative
+            tutor_asked_ready = any(phrase in last_tutor_msg for phrase in 
+                                   ["ready to see", "want to see", "ready for", 
+                                    "shall we", "let's look"])
+            
+            affirmatives = ["yes", "yeah", "yep", "sure", "ok", "okay", "ready",
+                          "let's go", "show me", "i'm ready", "sounds good", 
+                          "go ahead", "continue", "yup", "definitely", "absolutely"]
+            
+            # Advance if affirmative OR if tutor asked and student responded positively
+            return any(term in user_lower for term in affirmatives) or (
+                tutor_asked_ready and word_count <= 3 and len(user_lower) < 20
+            )
 
         if self.current_step == ScaffoldStep.VISUAL_DIAGRAM:
-            # Only advance when they explicitly signal readiness
-            ready_terms = ["ready", "go", "show me", "yes", "ok", "okay",
-                           "understand", "yep", "yeah", "helpful", "interesting"]
-            return any(term in user_lower for term in ready_terms)
+            # Accept affirmatives OR acknowledgment
+            affirmatives = ["yes", "yeah", "yep", "sure", "ok", "okay", "got it",
+                          "makes sense", "i see", "understand", "helpful", "clear",
+                          "cool", "nice", "good", "right", "yup", "great"]
+            return any(term in user_lower for term in affirmatives)
 
         if self.current_step == ScaffoldStep.CODE_STRUCTURE:
-            # Advance after acknowledgment of manual logic / "hidden work"
-            ack_terms = ["makes sense", "i see", "copy", "expensive",
-                         "heavy", "got it", "understand", "ohhh"]
-            return any(term in user_lower for term in ack_terms)
+            # Accept general affirmatives OR questions about usage
+            affirmatives = ["yes", "yeah", "sure", "ok", "okay", "got it",
+                          "makes sense", "i see", "understand", "good", "right",
+                          "cool", "nice", "great"]
+            usage_questions = ["how do i", "how would i", "how to use", 
+                             "what about", "can i"]
+            return (any(term in user_lower for term in affirmatives) or
+                   any(term in user_lower for term in usage_questions))
 
         if self.current_step == ScaffoldStep.CODE_USAGE:
-            # Move to practice once they engage at least minimally
-            return len(user_message.strip()) > 10
+            # Accept affirmatives to move to practice
+            affirmatives = ["yes", "yeah", "sure", "ok", "okay", "got it",
+                          "makes sense", "understand", "good", "ready",
+                          "let's practice", "practice", "try", "cool"]
+            return any(term in user_lower for term in affirmatives)
 
         if self.current_step == ScaffoldStep.PRACTICE:
-            next_step = ScaffoldStep.REFLECTION
+            # Accept affirmatives to move to reflection
+            affirmatives = ["yes", "yeah", "sure", "ok", "okay", "got it",
+                          "done", "finished", "good", "understand", "ready",
+                          "no more", "that's all", "yup", "yep"]
+            return any(term in user_lower for term in affirmatives)
 
+        # Default: do NOT advance
         return False
 
     def advance_step(self) -> None:
@@ -86,3 +122,4 @@ class TutorFlow:
 
         if idx < len(steps) - 1:
             self.current_step = steps[idx + 1]
+            self.step_message_count = 0  # Reset counter for new step
