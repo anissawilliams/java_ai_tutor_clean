@@ -93,25 +93,18 @@ ARRAYLIST_TOPIC = ResearchTopic(
         "student_metaphor": (
             "1. Briefly acknowledge the student's metaphor or example.\n"
             "2. Pivot to the conflict: {agent_crisis}\n"
-            "3. Ask: 'Are you ready to see how Java code handles this crisis?'"
+            "3. Ask: 'Ready to see how this works visually?'"
         ),
         "visual_diagram": (
-            "1. Show a diagram of an ArrayList with 4 slots and 4 items.\n"
-            "2. Ask: 'What happens if we add a 5th element?'\n"
-            "3. Show the diagram with a 5th slot and 5th item."
-
+            "The visual was already shown. Do NOT show it again.\n"
+            "Ask ONE question: 'What part of this diagram is most helpful?'\n"
+            "Listen to their answer, then move forward. Keep response under 50 words."
         ),
         "code_structure": (
-            "1. Present a MANUAL dynamic array implementation (not the built-in ArrayList).\n"
-            "2. Emphasize the 'Hidden Work': {code_focus}\n"
-            "3. Walk through pseudocode like:\n"
-            "   IF size == internalArray.length:\n"
-            "       newArray = NEW Array[capacity * 2]\n"
-            "       FOR i from 0 to size:\n"
-            "           newArray[i] = internalArray[i]\n"
-            "       internalArray = newArray\n"
-            "4. Make sure the student notices the copy loop and the reassignment "
-            "of internalArray."
+            "Show the resize() method implementation ONCE.\n"
+            "Highlight: (1) create new array, (2) copy loop, (3) reassign reference.\n"
+            "Ask ONE focused question: 'What do you notice about this copy loop?'\n"
+            "Do NOT walk through pseudocode. Do NOT re-explain resizing logic."
         ),
         "contrast": (
             "1. Ask: 'What do you think Java's ArrayList does behind the scenes "
@@ -122,26 +115,20 @@ ARRAYLIST_TOPIC = ResearchTopic(
             "from the programmer."
         ),
         "code_usage": (
-            "1. Explain that the resize is an O(n) operation because every element "
-            "must be copied when the array grows.\n"
-            "2. Ask a reasoning question, such as: 'If we have 1,000 items and the "
-            "array fills up, how many items might we need to move during a resize?'\n"
-            "3. Ask: 'If ArrayList hides the resizing, why might it still be "
-            "important to understand how it works?'"
+            "Show ONE simple usage example: creating array, adding elements.\n"
+            "Mention resize happens automatically when capacity exceeded.\n"
+            "Ask: 'What happens performance-wise when we add 1000 items?'\n"
+            "Do NOT re-explain resizing. Student already knows this."
         ),
         "practice": (
-            "1. Review the student's attempt to implement or reason about dynamic resizing.\n"
-            "2. Give targeted feedback that moves them closer to: {agent_solution}\n"
-            "3. If they miss the reassignment step, explicitly ask about how the "
-            "class starts using newArray (internalArray = newArray)."
+            "Ask ONE practice question about when resizing occurs.\n"
+            "Example: 'If capacity is 8 and size is 7, what happens when we add 2 elements?'\n"
+            "Give brief feedback. Move to reflection quickly."
         ),
         "reflection": (
-            "1. Ask: 'How does understanding the manual resizing process help you "
-            "use ArrayList more effectively in real programs?'\n"
-            "2. Have the student summarize the difference between a fixed-size array "
-            "and an ArrayList that resizes under the hood.\n"
-            "3. End with the insight that ArrayList abstracts away the complexity, "
-            "but the underlying O(n) behavior still matters for performance."
+            "Ask student to summarize what they learned in 1-2 sentences.\n"
+            "Key point: ArrayList feels infinite but has O(n) resize cost.\n"
+            "This is the final step - wrap up concisely."
         ),
     }
 )
@@ -188,7 +175,14 @@ RECURSION_TOPIC = ResearchTopic(
         "student_metaphor": (
             "1. Acknowledge the student's metaphor or example.\n"
             "2. Pivot to the crisis: {agent_crisis}\n"
-            "3. Ask: 'What would the simplest version of this problem look like?'"
+            "3. Ask: 'Ready to see how the call stack works visually?'"
+        ),
+        "visual_diagram": (
+            "The student has seen a visual diagram showing the recursive call stack.\n"
+            "1. Explain how each recursive call gets added to the stack, building up.\n"
+            "2. Point out how the base case stops the recursion.\n"
+            "3. Show how the stack unwinds, each call returning its value.\n"
+            "4. Ask: 'Can you see how the stack builds up and then unwinds?'"
         ),
         "code_structure": (
             "1. Show a recursive factorial function and first present it WITHOUT "
