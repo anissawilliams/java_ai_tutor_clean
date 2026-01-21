@@ -20,63 +20,43 @@ class QuizQuestion:
 
 ARRAYLIST_QUIZ = [
     QuizQuestion(
-        question="What is the main advantage of ArrayList over a regular array?",
+        question="""Scenario: You want to store a list of student test scores (whole numbers) in an ArrayList. 
+                You try to write: ArrayList<int> scores = new ArrayList<>();
+                Why will this code cause a compiler error in Java?""",
         options=[
-            "ArrayList is faster for all operations",
-            "ArrayList can change size dynamically",
-            "ArrayList uses less memory",
-            "ArrayList can only store integers"
+            "ArrayList can only store Objects (like Integer), not primitive data types (like int).",
+            "ArrayList is only designed to hold text (String), not numbers.",
+            "You forgot to specify the maximum number of scores in the parentheses.",
+            "You must use a Double array if you want to store any kind of number."
+        ],
+        correct_index=0,
+        explanation="Generics in Java do not support primitive types; you must use Wrapper classes like Integer."
+    ),
+    QuizQuestion(
+        question="""Scenario: You have an array int[] nums = {1, 2, 3}; and an ArrayList<Integer> list. 
+                Both have data inside them. Which of the following correctly shows how to get the 
+                value at the second position (index 1) for both?""",
+        options=[
+            "Array: nums.get(1); ArrayList: list[1]",
+            "Array: nums[1]; ArrayList: list[1]",
+            "Array: nums[1]; ArrayList: list.get(1)",
+            "Array: nums.get(1); ArrayList: list.get(1)"
+        ],
+        correct_index=2,
+        explanation="Arrays use square brackets [] while ArrayLists use the .get() method."
+    ),
+    QuizQuestion(
+        question="""Scenario: You have a list of tasks in an ArrayList. When a task is finished, 
+                you use the .remove(0) method to delete the first item. What happens to the 
+                remaining items in the ArrayList after you remove the item at index 0?""",
+        options=[
+            "The index 0 becomes null, and all other items stay at their original index.",
+            "All remaining items automatically shift down one position (the item at index 1 moves to index 0).",
+            "The ArrayList is deleted from memory, and you must create a new one.",
+            "The program will throw an error because you are only allowed to remove items from the end."
         ],
         correct_index=1,
-        explanation="ArrayList can grow and shrink automatically, while arrays have a fixed size."
-    ),
-    
-    QuizQuestion(
-        question="What happens when an ArrayList runs out of capacity?",
-        options=[
-            "It throws an error",
-            "It stops accepting new elements",
-            "It creates a larger internal array and copies elements",
-            "It compresses existing elements"
-        ],
-        correct_index=2,
-        explanation="ArrayList automatically creates a larger array (usually ~1.5x size) and copies all elements to it."
-    ),
-    
-    QuizQuestion(
-        question="Which operation is O(1) for ArrayList?",
-        options=[
-            "Adding an element at the beginning",
-            "Removing an element from the middle",
-            "Getting an element by index",
-            "Finding an element by value"
-        ],
-        correct_index=2,
-        explanation="Getting an element by index is O(1) because ArrayList uses an array internally with direct index access."
-    ),
-    
-    QuizQuestion(
-        question="What is the initial capacity of a default ArrayList?",
-        options=[
-            "0",
-            "1", 
-            "10",
-            "100"
-        ],
-        correct_index=2,
-        explanation="By default, ArrayList starts with a capacity of 10 elements."
-    ),
-    
-    QuizQuestion(
-        question="When is ArrayList resizing most expensive?",
-        options=[
-            "When the ArrayList is empty",
-            "When the ArrayList has many elements to copy",
-            "When the ArrayList has one element",
-            "ArrayList resizing is always the same cost"
-        ],
-        correct_index=1,
-        explanation="Resizing requires copying all existing elements to a new array, so it's more expensive when there are more elements."
+        explanation="ArrayLists are contiguous; removing an element causes all subsequent elements to shift left."
     )
 ]
 
@@ -216,3 +196,5 @@ def score_quiz(topic_key: str, user_answers: dict) -> tuple:
         })
     
     return score, len(quiz), results
+
+

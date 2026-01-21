@@ -55,6 +55,12 @@ class TutorFlow:
                            "understand", "yep", "yeah"]
             return any(term in user_lower for term in ready_terms)
 
+        if self.current_step == ScaffoldStep.VISUAL_DIAGRAM:
+            # Only advance when they explicitly signal readiness
+            ready_terms = ["ready", "go", "show me", "yes", "ok", "okay",
+                           "understand", "yep", "yeah", "helpful", "interesting"]
+            return any(term in user_lower for term in ready_terms)
+
         if self.current_step == ScaffoldStep.CODE_STRUCTURE:
             # Advance after acknowledgment of manual logic / "hidden work"
             ack_terms = ["makes sense", "i see", "copy", "expensive",

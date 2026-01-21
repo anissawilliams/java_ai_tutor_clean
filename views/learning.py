@@ -55,27 +55,34 @@ def render_learning_session():
     # -------------------------
     # Chat display
     # -------------------------
-    chat_container = st.container()
+    top_content = st.container()
+    with top_content:
+        st.title(f"**Topic:** {topic.name}")
+        st.write(f"Let's learn about {topic.name} together!")
 
-    with chat_container:
-        if condition in [1, 2]:  # Scaffolded
+    chat_history_container = st.container()
+
+    # 3. Create a container for the Input (This "pins" it to the end of the history)
+    input_container = st.container()
+
+    with input_container:
+        user_input = st.chat_input("Type your response...")
+
+    # 4. Render History INTO the history container
+    with chat_history_container:
+        if condition in [1, 2]:
             for msg in st.session_state.flow.messages:
                 with st.chat_message(msg.role):
                     st.write(msg.content)
-        else:  # Direct chat
+        else:
             for msg in st.session_state.messages:
                 with st.chat_message(msg["role"]):
                     st.write(msg["content"])
 
-    # -------------------------
-    # Chat input
-    # -------------------------
-    user_input = st.chat_input("Type your response...")
-
+    # 5. Logic Handling
     if user_input:
         if condition in [1, 2]:
             handle_user_message_scaffolded(user_input)
         else:
             handle_user_message_direct(user_input)
-
         st.rerun()

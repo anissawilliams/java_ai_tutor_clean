@@ -7,44 +7,27 @@ from utils.config import (
     SESSION_DURATION, CONDITIONS, SESSIONS, STUDY_INFO
 )
 
-from utils.auth import logout_user
+from utils.auth import logout_user, get_user_data
 from utils.database import (
-    save_session_start, save_message, save_scaffold_progress,
-    save_quiz_responses, save_survey_responses, complete_session,
+    save_session_start, save_message,
     get_session_status, get_next_session
 )
 
-from client.admin_module import (
-    should_show_admin_dashboard,
-    render_admin_dashboard,
-)
-
 from content.research_topics import get_research_topic
-from content.static_quiz import get_quiz, score_quiz
-from content.survey import render_survey, validate_survey_complete
 
 from client.ai_client import SimpleAIClient
 import tutor_flow.flow_manager
-from tutor_flow.handlers import (
-    generate_initial_message,
-    handle_user_message_scaffolded,
-    handle_user_message_direct,
-)
+# Lazy import to avoid circular dependency
+# from tutor_flow.handlers import generate_initial_message
+
 from characters import get_all_character_names, get_character
 
 
 def render_dashboard():
     """Render the main dashboard showing session progress."""
-    # Admin dashboard first
-    if should_show_admin_dashboard(st.session_state.user_id, st.session_state.email):
-        render_admin_dashboard()
-        return
-
-    # Regular student dashboard
     st.title(f"Welcome, {st.session_state.email}!")
 
     # Get user data and condition
-    from utils.auth import get_user_data  # keep import here to avoid cycles
     user_data = get_user_data(st.session_state.user_id)
     condition = user_data.get("condition", 1)
     condition_name = CONDITIONS.get(condition, "Unknown")
@@ -55,7 +38,7 @@ def render_dashboard():
     with st.expander("ℹ️ About This Study"):
         st.write(STUDY_INFO["description"])
         st.write(f"**Estimated time:** {STUDY_INFO['estimated_time']}")
-        st.write(f"**Your condition:** {condition_name}")
+        # Don't show condition to students - keep it blind
 
     st.write("---")
 
@@ -128,6 +111,8 @@ def render_dashboard():
 
 def render_character_selection():
     """Render character selection (Condition 1 only)."""
+    from tutor_flow.handlers import generate_initial_message
+    
     st.title("Choose Your Tutor")
 
     topic = get_research_topic(st.session_state.current_session_id)
@@ -154,6 +139,8 @@ def render_character_selection():
 
 def start_session(session_id: str):
     """Initialize a learning session."""
+    from tutor_flow.handlers import generate_initial_message
+    
     topic = get_research_topic(session_id)
     condition = st.session_state.condition
 
@@ -161,9 +148,8 @@ def start_session(session_id: str):
     st.session_state.ai_client = SimpleAIClient()
     st.session_state.current_session_id = session_id
 
-    # Save session start to database (only if not admin test)
-    if not st.session_state.get("is_admin_test", False):
-        save_session_start(st.session_state.user_id, session_id, condition)
+    # Save session start to database
+    save_session_start(st.session_state.user_id, session_id, condition)
 
     # Initialize based on condition
     if condition in [1, 2]:  # Scaffolded
@@ -198,10 +184,9 @@ def start_session(session_id: str):
             }
         )
 
-        if not st.session_state.get("is_admin_test", False):
-            save_message(
-                st.session_state.user_id,
-                session_id,
-                "assistant",
-                welcome,
-            )
+        save_message(
+            st.session_state.user_id,
+            session_id,
+            "assistant",
+            welcome,
+        )

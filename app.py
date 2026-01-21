@@ -10,7 +10,7 @@ def main():
     st.set_page_config(
         page_title="Java Learning Study",
         page_icon="🎓",
-        layout="wide"
+        layout="centered"
     )
 
     init_session_state()

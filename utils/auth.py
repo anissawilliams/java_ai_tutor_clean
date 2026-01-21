@@ -1,7 +1,9 @@
 import streamlit as st
 import requests
 import firebase_admin
-from firebase_admin import credentials, auth as admin_auth
+from firebase_admin import credentials, auth as admin_auth, db
+from utils.config import MANUAL_CONDITION_ASSIGNMENTS, CONDITIONS
+import time
 
 # ---------------------------------------------------------
 # Firebase Initialization (Admin SDK)
@@ -60,10 +62,81 @@ def firebase_login(email: str, password: str):
     data = response.json()
 
     if "idToken" in data:
+        # After successful login, ensure user has condition assigned
+        user_id = data["localId"]
+        assign_condition_if_needed(user_id, email)
         return data
     else:
         error_msg = data.get("error", {}).get("message", "Login failed")
         raise ValueError(error_msg)
+
+
+def assign_condition_if_needed(user_id: str, email: str):
+    """
+    Assign condition to user based on manual assignments.
+    If email not in manual assignments, assign based on balanced distribution.
+    """
+    try:
+        ref = db.reference(f'users/{user_id}')
+        user_data = ref.get()
+        
+        # If user already has condition, don't change it
+        if user_data and 'condition' in user_data:
+            return
+        
+        # Check manual assignments first
+        if email in MANUAL_CONDITION_ASSIGNMENTS:
+            assigned_condition = MANUAL_CONDITION_ASSIGNMENTS[email]
+        else:
+            # Auto-assign based on balanced distribution
+            assigned_condition = get_balanced_condition()
+        
+        # Create or update user record
+        if not user_data:
+            user_data = {
+                'email': email,
+                'condition': assigned_condition,
+                'condition_name': CONDITIONS[assigned_condition],
+                'assigned_date': time.time(),
+                'sessions': {
+                    'arraylist': {'status': 'not_started'},
+                    'recursion': {'status': 'not_started'}
+                }
+            }
+            ref.set(user_data)
+        else:
+            # User exists but no condition
+            ref.update({
+                'condition': assigned_condition,
+                'condition_name': CONDITIONS[assigned_condition],
+                'assigned_date': time.time()
+            })
+            
+    except Exception as e:
+        st.error(f"Error assigning condition: {e}")
+
+
+def get_balanced_condition() -> int:
+    """
+    Assign condition based on balanced distribution.
+    Returns the condition with fewest users.
+    """
+    try:
+        ref = db.reference('users')
+        all_users = ref.get() or {}
+        
+        condition_counts = {1: 0, 2: 0, 3: 0}
+        for user_data in all_users.values():
+            condition = user_data.get('condition', 0)
+            if condition in condition_counts:
+                condition_counts[condition] += 1
+        
+        # Return condition with fewest users
+        return min(condition_counts, key=condition_counts.get)
+        
+    except Exception as e:
+        st.error(f"Error getting balanced condition: {e}")
+        return 1  # Default to condition 1
 
 
 # ---------------------------------------------------------
@@ -77,12 +150,13 @@ def set_session(user_data: dict):
     st.session_state["refresh_token"] = user_data["refreshToken"]
     st.session_state["user_id"] = user_data["localId"]
     st.session_state["email"] = user_data.get("email")
+    st.session_state["condition"] = user_data.get("condition")
 
 
 def logout_user():
     """Clear session state."""
-    for key in ["logged_in", "id_token", "refresh_token", "uid", "email"]:
-        st.session_state.pop(key, None)
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
 
 
 def require_auth():
@@ -98,16 +172,39 @@ def require_auth():
 
 def get_user_data(uid: str):
     """
-    Fetch user info from Firebase Authentication using Admin SDK.
+    Fetch user info from Firebase Realtime Database.
     """
     try:
-        user = admin_auth.get_user(uid)
-        return {
-            "uid": user.uid,
-            "email": user.email,
-            "disabled": user.disabled,
-            "email_verified": user.email_verified,
-        }
+        ref = db.reference(f'users/{uid}')
+        user_data = ref.get()
+        
+        if user_data:
+            return user_data
+        else:
+            # User doesn't exist in database yet, create basic record
+            auth_user = admin_auth.get_user(uid)
+            email = auth_user.email
+            
+            # Assign condition
+            if email in MANUAL_CONDITION_ASSIGNMENTS:
+                condition = MANUAL_CONDITION_ASSIGNMENTS[email]
+            else:
+                condition = get_balanced_condition()
+            
+            new_user_data = {
+                'email': email,
+                'condition': condition,
+                'condition_name': CONDITIONS[condition],
+                'assigned_date': time.time(),
+                'sessions': {
+                    'arraylist': {'status': 'not_started'},
+                    'recursion': {'status': 'not_started'}
+                }
+            }
+            
+            ref.set(new_user_data)
+            return new_user_data
+            
     except Exception as e:
         st.error(f"Error fetching user data: {e}")
         return None

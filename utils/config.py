@@ -19,6 +19,19 @@ CONDITIONS = {
     3: "direct_chat"                # Control: No Character, No Scaffolding
 }
 
+# Manual Condition Assignments
+# Add student emails here with their assigned condition
+MANUAL_CONDITION_ASSIGNMENTS = {
+    # Example:
+    # "student1@cofc.edu": 1,
+    # "student2@cofc.edu": 2,
+    # "student3@cofc.edu": 3,
+    
+    # Researcher/testing accounts (you can delete these from Firebase later)
+    "anissawilliamschs@gmail.com": 1,
+    "hashemi@cofc.edu": 1,
+}
+
 # Session Sequence
 SESSIONS = {
     'session_1': {
@@ -72,7 +85,7 @@ EXPORT_INCLUDE = [
 ]
 
 # UI Settings
-SHOW_DEBUG_INFO = True  # Set to True for testing, False for production
+SHOW_DEBUG_INFO = False  # Set to True for testing, False for production
 SHOW_SKIP_BUTTONS = True  # Set to True to enable "Skip to Quiz" button
 REQUIRE_EMAIL_VERIFICATION = False  # Set to True if using email verification
 ALLOW_MULTIPLE_ATTEMPTS = False  # Students can only do each session once
@@ -81,7 +94,7 @@ ALLOW_MULTIPLE_ATTEMPTS = False  # Students can only do each session once
 STUDY_INFO = {
     'title': 'Java Learning Research Study',
     'description': 'Help us understand how different teaching methods affect learning!',
-    'institution': 'Your University',
+    'institution': 'College of Charleston',
     'estimated_time': '~18 minutes per session (2 sessions total)',
-    'contact': 'researcher@university.edu'
+    'contact': 'researcher@cofc.edu'
 }
