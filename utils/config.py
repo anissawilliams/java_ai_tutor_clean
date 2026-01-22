@@ -5,8 +5,13 @@ Core settings for the Java learning research study
 
 # Session Configuration
 SESSION_DURATION = 15 * 60  # 10 minutes for learning
-QUIZ_TIME_ESTIMATE = 5 * 60  # ~5 minutes for quiz (no hard limit)
+QUIZ_TIME_ESTIMATE = 10 * 60  # ~5 minutes for quiz (no hard limit)
 SURVEY_TIME_ESTIMATE = 5 * 60  # ~3 minutes for survey
+
+# Session Available Dates
+SESSION_1_START = '2026-01-22'
+SESSION_2_START = '2026-01-30'
+
 
 # Study Configuration
 TOTAL_PARTICIPANTS = 60
@@ -38,6 +43,7 @@ SESSIONS = {
     'session_1': {
         'id': 'arraylist',
         'name': 'Dynamic ArrayList',
+        'start_date': SESSION_1_START,
         'topic_key': 'arraylist',
         'difficulty': 'easy',
         'order': 1,
@@ -46,6 +52,7 @@ SESSIONS = {
     'session_2': {
         'id': 'recursion',
         'name': 'Recursion',
+        'start_date': SESSION_2_START,
         'topic_key': 'recursion',
         'difficulty': 'hard',
         'order': 2,

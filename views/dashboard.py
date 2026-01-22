@@ -2,9 +2,10 @@
 
 import time
 import streamlit as st
+from datetime import datetime
 
 from utils.config import (
-    SESSION_DURATION, CONDITIONS, SESSIONS, STUDY_INFO
+    SESSION_DURATION, CONDITIONS, SESSIONS, STUDY_INFO, SESSION_1_START, SESSION_2_START
 )
 
 from utils.auth import logout_user, get_user_data
@@ -35,10 +36,10 @@ def render_dashboard():
     st.session_state.condition = condition
 
     # Study info
-    with st.expander("ℹ️ About This Study"):
-        st.write(STUDY_INFO["description"])
-        st.write(f"**Estimated time:** {STUDY_INFO['estimated_time']}")
-        # Don't show condition to students - keep it blind
+    # with st.expander("ℹ️ About This Study"):
+    #     st.write(STUDY_INFO["description"])
+    #     st.write(f"**Estimated time:** {STUDY_INFO['estimated_time']}")
+    #     # Don't show condition to students - keep it blind
 
     st.write("---")
 
@@ -64,9 +65,11 @@ def render_dashboard():
         session_id = session_config["id"]
         status = get_session_status(st.session_state.user_id, session_id)
 
-        # Availability
-        is_available = True
-        if "requires_completion" in session_config:
+        # Availability - time-based check
+        start_date = datetime.strptime(session_config["start_date"], '%Y-%m-%d')
+        is_available = datetime.now() >= start_date
+
+        if is_available and "requires_completion" in session_config:
             required = session_config["requires_completion"]
             required_status = get_session_status(
                 st.session_state.user_id,
@@ -81,7 +84,7 @@ def render_dashboard():
             with col1:
                 st.write(f"### {session_config['name']}")
                 st.write(session_config["description"])
-                st.caption(f"Difficulty: {session_config['difficulty']}")
+                #st.caption(f"Difficulty: {session_config['difficulty']}")
 
             with col2:
                 if status == "completed":
