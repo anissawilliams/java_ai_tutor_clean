@@ -55,7 +55,7 @@ class SimpleAIClient:
                 max_tokens=500
             )
 
-            print(f"DEBUG: Got response: {response.choices[0].message.content[:100]}")
+            #print(f"DEBUG: Got response: {response.choices[0].message.content[:100]}")
             return response.choices[0].message.content.strip()
 
         except Exception as e:

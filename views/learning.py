@@ -1,11 +1,11 @@
 # views/learning.py
 
 import time
+
 import streamlit as st
 
 from utils.config import SESSION_DURATION
 from content.research_topics import get_research_topic
-
 from tutor_flow.handlers import (
     handle_user_message_scaffolded,
     handle_user_message_direct,
@@ -26,6 +26,13 @@ def render_learning_session():
             f"🔧 **Admin Test Mode** — Testing Condition {condition}. "
             "Data will not be saved."
         )
+
+    # -------------------------
+    # Check if quiz is ready (from handlers)
+    # -------------------------
+    if st.session_state.get('quiz_ready', False):
+        st.session_state.phase = 'quiz'
+        st.rerun()
 
     # -------------------------
     # Header + Timer

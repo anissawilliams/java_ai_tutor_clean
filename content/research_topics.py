@@ -101,22 +101,17 @@ ARRAYLIST_TOPIC = ResearchTopic(
             "Listen to their answer, then move forward. Keep response under 50 words."
         ),
         "code_structure": (
-            "Show the resize() method implementation ONCE.\n"
-            "Highlight: (1) create new array, (2) copy loop, (3) reassign reference.\n"
-            "Ask ONE focused question: 'What do you notice about this copy loop?'\n"
-            "Do NOT walk through pseudocode. Do NOT re-explain resizing logic."
-        ),
-        "contrast": (
-            "1. Ask: 'What do you think Java's ArrayList does behind the scenes "
-            "when it runs out of space?'\n"
-            "2. Explain that ArrayList performs a similar resize: it creates a "
-            "bigger array, copies all elements, and switches to that array.\n"
-            "3. Highlight that the heavy O(n) work still happens; it's just hidden "
-            "from the programmer."
+            "Show the RESIZE method - the internal mechanism.\n"
+            "Highlight the copy loop: for (int i = 0; i < size; i++)\n"
+            "Explain: This is O(n) - every element must be copied.\n"
+            "Ask: 'If we have 1000 elements, how expensive is this copy?'\n"
+            "Do NOT show usage code. Show the INTERNAL implementation."
         ),
         "code_usage": (
-            "Show ONE simple usage example: creating array, adding elements.\n"
-            "Mention resize happens automatically when capacity exceeded.\n"
+            "NOW show usage code:\n"
+            "ArrayList<String> items = new ArrayList<>();\n"
+            "items.add(\"A\");\n"
+            "Explain that resize happens automatically behind the scenes.\n"
             "Ask: 'What happens performance-wise when we add 1000 items?'\n"
             "Do NOT re-explain resizing. Student already knows this."
         ),
