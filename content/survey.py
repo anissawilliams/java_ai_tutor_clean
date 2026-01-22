@@ -64,11 +64,11 @@ SURVEY_QUESTIONS = {
         'placeholder': 'Share your thoughts...'
     },
     
-    'what_improve': {
-        'text': 'What could be improved?',
-        'type': 'text',
-        'placeholder': 'Your suggestions...'
-    },
+    # 'what_improve': {
+    #     'text': 'What could be improved?',
+    #     'type': 'text',
+    #     'placeholder': 'Your suggestions...'
+    # },
     
     'would_use_again': {
         'text': 'Would you use this tool again for other CS topics?',

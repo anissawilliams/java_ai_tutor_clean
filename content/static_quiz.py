@@ -72,16 +72,18 @@ ARRAYLIST_QUIZ = [
     ),
 
     QuizQuestion(
-        question="When is ArrayList resizing most expensive?",
+        question="When designing a new Java system component, when would you prefer to use an ArrayList over a traditional array?",
         options=[
-            "When the ArrayList is empty",
-            "When the ArrayList has many elements to copy",
-            "When the ArrayList has one element",
-            "ArrayList resizing is always the same cost"
-        ],
-        correct_index=1,
-        explanation="Resizing requires copying all existing elements to a new array, so it's more expensive when there are more elements.",
-        difficulty=4  # Hard - requires understanding of computational cost
+            "When implementing direct memory mapping with fixed buffer sizes for low-level hardware interfacing.",
+            "When designing high-performance math computations that require storing primitive data types without the overhead of autoboxing.",
+            "When handling business logic for flexibility with an unknown or dynamically changing size (such as managing items in a user's e-commerce shopping cart) and needing built-in functionality like sorting or filtering.",
+            "When storing a fixed number of elements whose maximum size is known at compile time and will not change, such as the 12 months of the year or 7 days of the week."
+        ]
+        ,
+        correct_index=2,
+        explanation="ArrayList is more flexible and efficient than a traditional array.",
+        difficulty=4
+
     )
 ]
 
