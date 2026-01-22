@@ -60,6 +60,8 @@ def render_learning_session():
         st.title(f"**Topic:** {topic.name}")
         st.write(f"Let's learn about {topic.name} together!")
 
+        st.write("---")
+
     chat_history_container = st.container()
 
     # 3. Create a container for the Input (This "pins" it to the end of the history)
