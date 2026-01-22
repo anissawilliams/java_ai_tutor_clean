@@ -45,8 +45,8 @@ class SimpleAIClient:
         messages.append({"role": "user", "content": user_message})
 
         try:
-            print(f"DEBUG: Sending {len(messages)} messages to API")
-            print(f"DEBUG: User message: {user_message}")
+            #print(f"DEBUG: Sending {len(messages)} messages to API")
+            #print(f"DEBUG: User message: {user_message}")
 
             response = self.client.chat.completions.create(
                 model=self.model,
