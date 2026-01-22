@@ -78,32 +78,6 @@ SURVEY_QUESTIONS = {
 }
 
 
-# Condition-specific questions (only for character condition)
-CHARACTER_SPECIFIC_QUESTIONS = {
-    'character_engagement': {
-        'text': 'The character personality made learning more engaging',
-        'type': 'likert_5',
-        'options': [
-            'Strongly Disagree',
-            'Disagree',
-            'Neutral',
-            'Agree',
-            'Strongly Agree'
-        ]
-    },
-    
-    'character_helpful': {
-        'text': 'The character personality helped me understand the material',
-        'type': 'likert_5',
-        'options': [
-            'Strongly Disagree',
-            'Disagree',
-            'Neutral',
-            'Agree',
-            'Strongly Agree'
-        ]
-    }
-}
 
 
 def render_survey(topic_name: str, condition: int) -> Dict:
@@ -156,22 +130,7 @@ def render_survey(topic_name: str, condition: int) -> Dict:
             )
             responses[key] = response
             st.write("")
-    
-    # Add character-specific questions if condition 1
-    if condition == 1:
-        st.write("---")
-        st.subheader("About the Character")
-        
-        for key, q_data in CHARACTER_SPECIFIC_QUESTIONS.items():
-            response = st.radio(
-                q_data['text'],
-                options=q_data['options'],
-                key=f"survey_{key}",
-                index=None
-            )
-            responses[key] = response
-            st.write("")
-    
+
     return responses
 
 

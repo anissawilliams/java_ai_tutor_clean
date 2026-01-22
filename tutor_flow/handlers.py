@@ -132,8 +132,14 @@ def handle_user_message_scaffolded(user_input: str):
                 f"{visual_intro}📊 **Visual Diagram:**\n{visual}",
                 step=flow.current_step.value,
             )
-            # Return here - visual is the complete response, don't generate another
             return
+
+        start_time = st.session_state.get('start_time', time.time())
+        elapsed_minutes = (time.time() - start_time) / 60
+
+        if (flow.completed or elapsed_minutes >= 15) and not st.session_state.get('quiz_ready', False):
+            st.session_state.quiz_ready = True
+            st.rerun()
 
     # Build system prompt
     if condition == 1:

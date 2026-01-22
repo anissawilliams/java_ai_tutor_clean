@@ -4,9 +4,9 @@ Core settings for the Java learning research study
 """
 
 # Session Configuration
-SESSION_DURATION = 10 * 60  # 10 minutes for learning
+SESSION_DURATION = 15 * 60  # 10 minutes for learning
 QUIZ_TIME_ESTIMATE = 5 * 60  # ~5 minutes for quiz (no hard limit)
-SURVEY_TIME_ESTIMATE = 3 * 60  # ~3 minutes for survey
+SURVEY_TIME_ESTIMATE = 5 * 60  # ~3 minutes for survey
 
 # Study Configuration
 TOTAL_PARTICIPANTS = 60
@@ -29,6 +29,7 @@ MANUAL_CONDITION_ASSIGNMENTS = {
     
     # Researcher/testing accounts (you can delete these from Firebase later)
     "anissawilliamschs@gmail.com": 1,
+    "anissaewilliams@gmail.com": 2,
     "hashemi@cofc.edu": 1,
 }
 

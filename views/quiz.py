@@ -48,21 +48,20 @@ def render_quiz():
         all_answered = len(st.session_state.quiz_answers) == len(quiz_questions)
 
         if st.button("Submit Quiz", type="primary", disabled=not all_answered):
-
-            # Score quiz
+            # Score quiz - now returns results with difficulty
             score, total, results = score_quiz(
                 session_id, st.session_state.quiz_answers
             )
 
-            # Save unless admin test
-            if not st.session_state.get("is_admin_test", False):
-                save_quiz_responses(
-                    st.session_state.user_id,
-                    session_id,
-                    st.session_state.quiz_answers,
-                    score,
-                    total,
-                )
+            # Save with results (includes difficulty tracking)
+            save_quiz_responses(
+                st.session_state.user_id,
+                session_id,
+                st.session_state.quiz_answers,
+                score,
+                total,
+                results  # ✅ NEW: Pass results to save difficulty data
+            )
 
             # Store results
             st.session_state.quiz_submitted = True
@@ -93,9 +92,12 @@ def render_quiz():
 
     # Show detailed feedback
     for i, result in enumerate(st.session_state.quiz_results):
+        # Show difficulty level in feedback
+        difficulty_stars = "⭐" * result.get('difficulty', 1)
+
         with st.expander(
-            f"Question {i + 1} — "
-            f"{'✅ Correct' if result['is_correct'] else '❌ Incorrect'}"
+                f"Question {i + 1} ({difficulty_stars}) — "
+                f"{'✅ Correct' if result['is_correct'] else '❌ Incorrect'}"
         ):
             st.write(f"**Q:** {result['question']}")
             st.write(f"**Your answer:** {result['user_answer']}")
