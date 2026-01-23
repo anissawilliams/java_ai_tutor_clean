@@ -220,7 +220,7 @@ def handle_user_message_scaffolded(user_input: str):
         user_input,
         flow.get_recent_context(5),
     )
-    print(f"DEBUG: Response Prompt for {flow.current_step.value}:\n{response_prompt}\n")
+
     # Build conversation history
     recent_messages = flow.get_recent_context(5)
     conversation_history = [
