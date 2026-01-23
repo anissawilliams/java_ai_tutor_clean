@@ -1,11 +1,11 @@
 # views/learning.py
 
 import time
+
 import streamlit as st
 
 from utils.config import SESSION_DURATION
 from content.research_topics import get_research_topic
-
 from tutor_flow.handlers import (
     handle_user_message_scaffolded,
     handle_user_message_direct,
@@ -28,6 +28,13 @@ def render_learning_session():
         )
 
     # -------------------------
+    # Check if quiz is ready (from handlers)
+    # -------------------------
+    if st.session_state.get('quiz_ready', False):
+        st.session_state.phase = 'quiz'
+        st.rerun()
+
+    # -------------------------
     # Header + Timer
     # -------------------------
     st.title(f"Learning: {topic.name}")
@@ -42,6 +49,32 @@ def render_learning_session():
         st.write(f"**Topic:** {topic.name} ({topic.difficulty})")
     with col2:
         st.metric("Time Left", f"{mins}:{secs:02d}")
+
+    # -------------------------
+    # Progress Indicator (Scaffolded Conditions Only)
+    # -------------------------
+    if condition in [1, 2] and hasattr(st.session_state, 'flow'):
+      # Only for scaffolded conditions
+        from tutor_flow.steps import ScaffoldStep
+
+        # Define step names for display
+        step_names = {
+            ScaffoldStep.INITIAL_METAPHOR: "Intro & Metaphor",
+            ScaffoldStep.STUDENT_METAPHOR: "Your Metaphor",
+            ScaffoldStep.VISUAL_DIAGRAM: "Visual Diagram",
+            ScaffoldStep.CODE_STRUCTURE: "Code Structure",
+            ScaffoldStep.CODE_USAGE: "Code Usage",
+            ScaffoldStep.PRACTICE: "Practice Problem",
+            ScaffoldStep.REFLECTION: "Summary & Wrap-up"
+        }
+
+        current_step_name = step_names.get(st.session_state.flow.current_step, "Learning")
+        steps_list = list(ScaffoldStep)
+        current_index = steps_list.index(st.session_state.flow.current_step)
+        progress = (current_index + 1) / len(steps_list)
+
+        st.progress(progress, text=f"**Step {current_index + 1}/7:** {current_step_name}")
+        st.caption("💡 We'll guide you through 7 steps to help you understand this topic deeply.")
 
     st.write("---")
 

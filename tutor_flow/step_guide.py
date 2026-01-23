@@ -31,27 +31,29 @@ class StepGuide:
         POLISHED with clear transitions and validation.
         """
 
-        # 1. INITIAL METAPHOR
+        # 1. INITIAL METAPHOR (AI gives their metaphor first)
         if current_step == ScaffoldStep.INITIAL_METAPHOR:
             return (
-                "The student shared their metaphor/analogy.\n\n"
-                "Response structure:\n"
-                "1. Acknowledge warmly: 'Great metaphor!' or 'Perfect analogy!'\n"
-                "2. Introduce the CONFLICT (why fixed arrays are a problem)\n"
-                "3. Tease the SOLUTION (we can solve this)\n"
-                "4. Ask: 'Ready to see how this works visually?'\n\n"
-                "Keep response under 100 words.\n"
-                "Be encouraging and build excitement for what's next."
+                f"Explain {topic_name} using a clear, non-technical metaphor.\n"
+                "Compare the technical concept to a real-world object or situation.\n"
+                "End by asking the student what this reminds them of from their own experience."
             )
 
-        # 2. STUDENT METAPHOR
+        # 2. STUDENT METAPHOR (Student gave theirs, AI responds with code)
         if current_step == ScaffoldStep.STUDENT_METAPHOR:
             return (
-                "The student said they're ready to see the visual.\n\n"
-                "Give ONE transition sentence:\n"
-                "'Perfect! Let me show you what happens inside the computer...'\n\n"
-                "Then STOP. The visual diagram will appear automatically with explanation.\n"
-                "Do NOT continue talking. Just that one sentence."
+                "The student shared their metaphor/analogy.\n\n"
+                "You MUST do ALL FOUR of these:\n"
+                "1. Acknowledge warmly: 'Perfect analogy!' or 'Great example!'\n"
+                "2. Connect their metaphor to Dynamic ArrayLists (1-2 sentences):\n"
+                "   'Just like your expandable suitcase, a Dynamic ArrayList...'\n"
+                "3. Show a tiny code snippet (3-5 lines) that illustrates the concept:\n"
+                "   ```java\n"
+                "   ArrayList<String> items = new ArrayList<>();\n"
+                "   items.add(\"item1\"); // starts small, auto-expands!\n"
+                "   ```\n"
+                "4. End with: 'Ready to see how this works visually?'\n\n"
+                "CRITICAL: Include ALL steps. Keep total response under 120 words."
             )
 
         # 3. VISUAL DIAGRAM
@@ -71,53 +73,50 @@ class StepGuide:
         # 4. CODE STRUCTURE
         if current_step == ScaffoldStep.CODE_STRUCTURE:
             return (
-                "Show the code that implements this concept.\n\n"
-                "Structure:\n"
-                "1. Show the key method (resize, recursive function, etc.)\n"
-                "2. Point to ONE specific line (the copy loop, the recursive call)\n"
-                "3. Ask a LEADING question:\n"
-                "   'What do you think happens if we have 1000 elements to copy?'\n\n"
-                "Accept answers like:\n"
-                "- 'slow' / 'expensive' / 'takes time'\n"
-                "- 'it copies them all'\n"
-                "- Any reasonable engagement\n\n"
-                "Keep under 150 words.\n"
-                "Do NOT re-explain concepts from previous steps."
+                "DO NOT ASK QUESTIONS. DO NOT RECAP.\n\n"
+                "Show ONLY this code:\n\n"
+                "```java\n"
+                "private void resize() {\n"
+                "  Object[] newArray = new Object[capacity * 2];\n"
+                "  for (int i = 0; i < size; i++) { // ← KEY LINE\n"
+                "    newArray[i] = internalArray[i];\n"
+                "  }\n"
+                "  internalArray = newArray;\n"
+                "}\n"
+                "```\n\n"
+                "Say: 'Notice the for-loop? It copies EVERY element. "
+                "What happens with 1000 elements?'\n\n"
+                "That's it. 100 words max."
             )
 
         # 5. CODE USAGE
         if current_step == ScaffoldStep.CODE_USAGE:
-            user_answered = len(user_input.split()) > 5
-
-            validation = ""
-            if user_answered:
-                validation = (
-                    "FIRST: Validate their answer!\n"
-                    "- If they said 'slow/expensive': 'Exactly! Copying is O(n)...'\n"
-                    "- If they gave specifics: 'Good thinking!'\n\n"
-                )
-
             return (
-                f"{validation}"
-                "Then show simple USAGE example (3-4 lines):\n"
+                "Brief validation (1 sentence).\n\n"
+                "Show usage:\n"
+                "```java\n"
                 "ArrayList<String> items = new ArrayList<>();\n"
                 "items.add(\"A\");\n"
-                "items.add(\"B\");  // etc.\n\n"
-                "Ask specific question:\n"
-                "'If we start with capacity 4 and keep adding items up to 100, "
-                "how many times will it resize?'\n\n"
-                "Accept:\n"
-                "- Specific numbers\n"
-                "- 'Multiple times' / 'several'\n"
-                "- Questions\n\n"
-                "Validate briefly, then transition: 'Let's practice with a scenario...'"
+                "items.add(\"B\");\n"
+                "```\n\n"
+                "Say: 'Let's practice with a scenario...'\n\n"
+                "Under 75 words. NO questions."
             )
 
-        # 6. PRACTICE (CRITICAL: ADD VALIDATION)
+        # 6. PRACTICE
+        # step_guide.py - PRACTICE section
         if current_step == ScaffoldStep.PRACTICE:
-            user_answered = len(user_input.split()) > 4
+            user_lower = user_input.lower()
+            has_numbers = any(char.isdigit() for char in user_input)
+            # Check word count - but make sure it's a substantial answer
+            user_answered = len(user_input.split()) >= 2 or has_numbers
 
-            if user_answered:
+            # Check if they're indicating readiness to move on (after validation)
+            readiness_keywords = ["ready", "sure", "ok", "okay", "yes", "let's", "go"]
+            is_ready = any(keyword in user_lower for keyword in readiness_keywords)
+
+            # If they answered with substance (not just "yes"), validate
+            if user_answered and not is_ready:
                 # They answered the practice problem - VALIDATE IT
                 return (
                     "The student just answered your practice scenario.\n\n"
@@ -132,32 +131,49 @@ class StepGuide:
                     "Do NOT skip validation. Students need to know if they got it right."
                 )
             else:
-                # First time at this step - give the practice problem
+                # First time at this step OR they said they're ready
+                # Give the practice problem
                 return (
-                    "Give a concrete practice scenario.\n\n"
-                    "Example:\n"
+                    "Give a simple word problem - NO CODE.\n\n"
+                    "CRITICAL: Do NOT show any Java code. Just give numbers.\n\n"
+                    "Example format:\n"
                     "'Let's practice! Imagine:\n"
-                    " - Current capacity: 8\n"
-                    " - Current size: 7\n"
-                    " - We add 2 new elements\n"
-                    " What happens internally?'\n\n"
-                    "Keep scenario simple and focused on the core mechanism we learned."
+                    "- Current capacity: 8\n"
+                    "- Current size: 7\n"
+                    "- We add 2 new elements\n\n"
+                    "What happens internally?'\n\n"
+                    "Use different numbers than the example.\n"
+                    "Keep it to 3-4 lines maximum.\n"
+                    "NO CODE. Just the scenario and question."
                 )
 
         # 7. REFLECTION
         if current_step == ScaffoldStep.REFLECTION:
-            return (
-                "The student gave their summary.\n\n"
-                "Final response structure:\n"
-                "1. Validate: 'Perfect!' or 'Exactly!'\n"
-                "2. Add final insight:\n"
-                "   'Understanding this hidden work makes you a better programmer - "
-                "   you'll know when to use ArrayList and when not to.'\n"
-                "3. Close with encouragement:\n"
-                "   'Great work today! Now let's test your knowledge with a quick quiz.'\n\n"
-                "Keep under 75 words total.\n"
-                "This is the wrap-up - make it encouraging and conclusive."
-            )
+            user_word_count = len(user_input.split())
+
+            # Check if they just said "yes/ready" vs actually gave a summary
+            if user_word_count < 8:
+                # They just said "yes" - ask for the actual summary
+                return (
+                    "The student said they're ready to summarize.\n\n"
+                    "Now ask them to give their summary:\n"
+                    "'Great! In your own words, what did you learn about "
+                    "how ArrayLists work internally?'\n\n"
+                    "Keep it brief and encouraging."
+                )
+            else:
+                # They gave a real summary - validate and wrap up
+                return (
+                    "The student gave their summary.\n\n"
+                    "Final response structure:\n"
+                    "1. Validate: 'Perfect!' or 'Exactly!'\n"
+                    "2. Add final insight:\n"
+                    "   'Understanding this hidden work makes you a better programmer - "
+                    "   you'll know when to use ArrayList and when not to.'\n"
+                    "3. Ask: 'Ready for the quiz?'\n\n"
+                    "Keep under 75 words total.\n"
+                    "This is the wrap-up - make it encouraging and ask if ready for quiz."
+                )
 
         # Fallback
         return f"Continue teaching {topic_name}. Be helpful and encouraging."
