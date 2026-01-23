@@ -52,7 +52,7 @@ class SimpleAIClient:
                 model=self.model,
                 messages=messages,
                 temperature=temperature,
-                max_tokens=500
+                max_tokens=1000
             )
 
             #print(f"DEBUG: Got response: {response.choices[0].message.content[:100]}")
