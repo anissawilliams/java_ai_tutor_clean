@@ -44,18 +44,18 @@ class TutorFlow:
         user_lower = user_message.lower().strip()
         word_count = len(user_message.split())
 
-        # 1. INITIAL METAPHOR → STUDENT METAPHOR
+        # 1. INITIAL METAPHOR → STUDENT METAPHOR (auto-advance after AI speaks)
         if self.current_step == ScaffoldStep.INITIAL_METAPHOR:
-            # Student gives metaphor (at least 2 words, 10+ chars)
-            return len(user_message.strip()) > 10 and word_count >= 2
+            # Advance after AI gives their metaphor (at least 1 tutor message)
+            return self.step_message_count >= 1
 
         # 2. STUDENT METAPHOR → VISUAL DIAGRAM
         if self.current_step == ScaffoldStep.STUDENT_METAPHOR:
-            # Require at least 1 tutor response (asked "ready to see visual?")
+            # Require at least 1 tutor response (gave code/connection/asked "ready?")
             if self.step_message_count < 1:
                 return False
 
-            # Expanded affirmatives
+            # THEN check if student confirmed ready
             affirmatives = ["yes", "yeah", "yep", "yup", "sure", "ok", "okay", "ready",
                             "definitely", "totally", "absolutely", "cool", "great", "nice",
                             "sounds good", "let's", "go", "show", "next"]
@@ -103,9 +103,10 @@ class TutorFlow:
             if self.step_message_count < 1:
                 return False
 
-            # After student answers problem (5+ words), advance to allow validation
+            # After student answers problem (2+ words OR has numbers), advance to allow validation
             if self.step_message_count == 1:
-                answered = word_count >= 5
+                has_numbers = any(char.isdigit() for char in user_message)
+                answered = word_count >= 2 or has_numbers  # Changed from >= 5
                 if answered:
                     return True
 

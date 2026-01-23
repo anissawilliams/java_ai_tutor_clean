@@ -35,13 +35,17 @@ class StepGuide:
         if current_step == ScaffoldStep.INITIAL_METAPHOR:
             return (
                 "The student shared their metaphor/analogy.\n\n"
-                "Response structure:\n"
-                "1. Acknowledge warmly: 'Great metaphor!' or 'Perfect analogy!'\n"
-                "2. Briefly connect to the technical concept (1 sentence)\n"
-                "3. End by asking: 'Ready to see how this works visually?'\n\n"
-                "CRITICAL: You MUST end with that exact question.\n"
-                "Keep response under 80 words.\n"
-                "Do NOT explain further. Just acknowledge and ask."
+                "You MUST do ALL FOUR of these:\n"
+                "1. Acknowledge warmly: 'Perfect analogy!' or 'Great example!'\n"
+                "2. Connect their metaphor to Dynamic ArrayLists (1-2 sentences):\n"
+                "   'Just like your expandable suitcase, a Dynamic ArrayList...'\n"
+                "3. Show a tiny code snippet (3-5 lines) that illustrates the concept:\n"
+                "   ```java\n"
+                "   ArrayList<String> items = new ArrayList<>();\n"
+                "   items.add(\"item1\"); // starts small, auto-expands!\n"
+                "   ```\n"
+                "4. End with: 'Ready to see how this works visually?'\n\n"
+                "CRITICAL: Include ALL steps. Keep total response under 120 words."
             )
 
         # 2. STUDENT METAPHOR
@@ -129,10 +133,19 @@ class StepGuide:
             )
 
         # 6. PRACTICE
+        # step_guide.py - PRACTICE section
         if current_step == ScaffoldStep.PRACTICE:
-            user_answered = len(user_input.split()) > 4
+            user_lower = user_input.lower()
+            has_numbers = any(char.isdigit() for char in user_input)
+            # Check word count - but make sure it's a substantial answer
+            user_answered = len(user_input.split()) >= 2 or has_numbers
 
-            if user_answered:
+            # Check if they're indicating readiness to move on (after validation)
+            readiness_keywords = ["ready", "sure", "ok", "okay", "yes", "let's", "go"]
+            is_ready = any(keyword in user_lower for keyword in readiness_keywords)
+
+            # If they answered with substance (not just "yes"), validate
+            if user_answered and not is_ready:
                 # They answered the practice problem - VALIDATE IT
                 return (
                     "The student just answered your practice scenario.\n\n"
@@ -147,7 +160,8 @@ class StepGuide:
                     "Do NOT skip validation. Students need to know if they got it right."
                 )
             else:
-                # First time at this step - give the practice problem
+                # First time at this step OR they said they're ready
+                # Give the practice problem
                 return (
                     "Give a simple word problem - NO CODE.\n\n"
                     "CRITICAL: Do NOT show any Java code. Just give numbers.\n\n"
