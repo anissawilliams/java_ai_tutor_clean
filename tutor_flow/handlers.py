@@ -205,14 +205,7 @@ def handle_user_message_scaffolded(user_input: str):
         # Return immediately - visual message is complete
         return
 
-    # Build system prompt
-    if condition == 1:
-        character = get_character(st.session_state.selected_character)
-        system_prompt = character.get_system_prompt(topic.name)
-    else:
-        system_prompt = f"You are a helpful CS tutor teaching {topic.name}."
-
-    # Build response prompt
+    # Build response prompt FIRST
     response_prompt = StepGuide.get_response_prompt(
         "Tutor",
         topic.name,
@@ -221,6 +214,14 @@ def handle_user_message_scaffolded(user_input: str):
         flow.get_recent_context(5),
     )
     print(f"DEBUG: Response Prompt for {flow.current_step.value}:\n{response_prompt}\n")
+
+    # Build system prompt SECOND
+    if condition == 1:
+        character = get_character(st.session_state.selected_character)
+        system_prompt = character.get_system_prompt(topic.name)
+    else:
+        system_prompt = f"You are a helpful CS tutor teaching {topic.name}."
+
     # Build conversation history
     recent_messages = flow.get_recent_context(5)
     conversation_history = [
@@ -231,10 +232,11 @@ def handle_user_message_scaffolded(user_input: str):
     # Generate response
     try:
         response = st.session_state.ai_client.generate_response(
-            system_prompt=system_prompt + "\n\n" + response_prompt,
-            user_message=user_input,
+            system_prompt=system_prompt,
+            user_message=f"{response_prompt}\n\nStudent said: {user_input}",
             conversation_history=conversation_history,
         )
+
     except Exception:
         response = "I'm having trouble responding. Could you try rephrasing that?"
 
@@ -301,7 +303,7 @@ def handle_user_message_direct(user_input: str):
         response = st.session_state.ai_client.generate_response(
             system_prompt=system_prompt,
             user_message=user_input,
-            conversation_history=conversation_history[:-1],
+            conversation_history=conversation_history,
         )
     except Exception:
         response = "I'm having trouble responding. Could you try rephrasing that?"

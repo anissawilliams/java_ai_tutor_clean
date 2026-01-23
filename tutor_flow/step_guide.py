@@ -31,8 +31,16 @@ class StepGuide:
         POLISHED with clear transitions and validation.
         """
 
-        # 1. INITIAL METAPHOR
+        # 1. INITIAL METAPHOR (AI gives their metaphor first)
         if current_step == ScaffoldStep.INITIAL_METAPHOR:
+            return (
+                f"Explain {topic_name} using a clear, non-technical metaphor.\n"
+                "Compare the technical concept to a real-world object or situation.\n"
+                "End by asking the student what this reminds them of from their own experience."
+            )
+
+        # 2. STUDENT METAPHOR (Student gave theirs, AI responds with code)
+        if current_step == ScaffoldStep.STUDENT_METAPHOR:
             return (
                 "The student shared their metaphor/analogy.\n\n"
                 "You MUST do ALL FOUR of these:\n"
@@ -46,16 +54,6 @@ class StepGuide:
                 "   ```\n"
                 "4. End with: 'Ready to see how this works visually?'\n\n"
                 "CRITICAL: Include ALL steps. Keep total response under 120 words."
-            )
-
-        # 2. STUDENT METAPHOR
-        if current_step == ScaffoldStep.STUDENT_METAPHOR:
-            return (
-                "The student said they're ready (yes/sure/ok).\n\n"
-                "Give ONLY this transition:\n"
-                "'Perfect! Let me show you what happens inside the computer...'\n\n"
-                "DO NOT ADD ANYTHING ELSE. Just that one sentence.\n"
-                "The visual will appear automatically next."
             )
 
         # 3. VISUAL DIAGRAM
@@ -75,61 +73,34 @@ class StepGuide:
         # 4. CODE STRUCTURE
         if current_step == ScaffoldStep.CODE_STRUCTURE:
             return (
-                "Show the RESIZE method implementation (the internal 'hidden work').\n\n"
-                "Example code to show:\n"
+                "DO NOT ASK QUESTIONS. DO NOT RECAP.\n\n"
+                "Show ONLY this code:\n\n"
                 "```java\n"
                 "private void resize() {\n"
-                "  Object[] newArray = new Object[capacity * 2]; // Create larger array\n"
-                "  for (int i = 0; i < size; i++) { // Copy loop - THIS IS KEY!\n"
-                "    newArray[i] = internalArray[i]; // Copying each element\n"
+                "  Object[] newArray = new Object[capacity * 2];\n"
+                "  for (int i = 0; i < size; i++) { // ← KEY LINE\n"
+                "    newArray[i] = internalArray[i];\n"
                 "  }\n"
-                "  internalArray = newArray; // Switch to new array\n"
+                "  internalArray = newArray;\n"
                 "}\n"
                 "```\n\n"
-                "CRITICAL - Point out the COPY LOOP:\n"
-                "'Notice the for-loop on line 3? That copies EVERY element one by one.\n"
-                "This is the hidden work - it happens automatically, but it takes time.'\n\n"
-                "Then ask:\n"
-                "'What do you think happens if we have 1000 elements to copy?'\n\n"
-                "This step is about showing the INTERNAL MECHANISM, not usage.\n"
-                "Do NOT show ArrayList usage code here - that's the next step.\n"
-                "Keep explanation under 150 words."
+                "Say: 'Notice the for-loop? It copies EVERY element. "
+                "What happens with 1000 elements?'\n\n"
+                "That's it. 100 words max."
             )
 
         # 5. CODE USAGE
         if current_step == ScaffoldStep.CODE_USAGE:
-            # Check if they tried to answer the previous question
-            user_lower = user_input.lower()
-            has_answer_keywords = any(word in user_lower
-                                      for word in ["slow", "expensive", "time", "copy",
-                                                   "multiple", "several", "many"])
-            is_substantive = len(user_input.split()) >= 4
-            pure_affirmative = user_lower.strip() in ["yes", "yeah", "yep", "sure",
-                                                      "ok", "okay", "ready"]
-
-            if (has_answer_keywords or is_substantive) and not pure_affirmative:
-                validation = (
-                    "FIRST: Validate their answer!\n"
-                    "- If they said 'slow/expensive': 'Exactly! Copying is O(n)...'\n"
-                    "- If they gave specifics: 'Good thinking!'\n\n"
-                )
-            else:
-                validation = ""
-
             return (
-                f"{validation}"
-                "Then show simple USAGE example (3-4 lines):\n"
+                "Brief validation (1 sentence).\n\n"
+                "Show usage:\n"
+                "```java\n"
                 "ArrayList<String> items = new ArrayList<>();\n"
                 "items.add(\"A\");\n"
-                "items.add(\"B\"); // etc.\n\n"
-                "Ask specific question:\n"
-                "'If we start with capacity 4 and keep adding items up to 100, "
-                "how many times will it resize?'\n\n"
-                "Accept:\n"
-                "- Specific numbers\n"
-                "- 'Multiple times' / 'several'\n"
-                "- Questions\n\n"
-                "Validate briefly, then transition: 'Let's practice with a scenario...'"
+                "items.add(\"B\");\n"
+                "```\n\n"
+                "Say: 'Let's practice with a scenario...'\n\n"
+                "Under 75 words. NO questions."
             )
 
         # 6. PRACTICE
