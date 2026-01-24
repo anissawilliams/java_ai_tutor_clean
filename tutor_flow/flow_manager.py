@@ -1,4 +1,9 @@
 # tutor_flow/flow_manager.py
+"""
+Manages the scaffolded tutoring flow.
+SIMPLIFIED: Trust the AI to handle conversation flow within each step.
+Advancement is based on simple rules, not complex state tracking.
+"""
 
 from __future__ import annotations
 from typing import List
@@ -8,11 +13,11 @@ from .steps import ScaffoldStep, ConversationMessage, RoleType
 class TutorFlow:
     """
     Manages the scaffolded tutoring flow.
-    POLISHED VERSION with smooth step progression.
+    Simple state machine - AI handles the nuance within each step.
     """
 
-    def __init__(self, topic_name: str, character_name: str) -> None:
-        self.topic_name: str = topic_name
+    def __init__(self, topic_key: str, character_name: str) -> None:
+        self.topic_key: str = topic_key
         self.character_name: str = character_name
         self.current_step: ScaffoldStep = ScaffoldStep.INITIAL_METAPHOR
         self.messages: List[ConversationMessage] = []
@@ -38,97 +43,127 @@ class TutorFlow:
 
     def should_advance_step(self, user_message: str) -> bool:
         """
-        Decide whether to move to the next scaffold step.
-        POLISHED with expanded keywords for better flow.
+        Simple advancement rules. We trust the AI to:
+        - Ask appropriate questions
+        - Validate answers
+        - Guide the student through each step
+
+        We only advance when student clearly signals readiness.
         """
         user_lower = user_message.lower().strip()
         word_count = len(user_message.split())
 
-        # 1. INITIAL METAPHOR → STUDENT METAPHOR (auto-advance after AI speaks)
+        # Signals that student is ready to move on
+        READY_SIGNALS = {
+            "yes", "yeah", "yep", "yup", "sure", "ok", "okay", "ready",
+            "let's go", "go ahead", "next", "continue", "show me",
+            "got it", "makes sense", "i understand", "understood",
+            "i see", "that helps", "clear", "cool", "great", "nice",
+            "sounds good", "alright", "perfect", "awesome"
+        }
+
+        # Signals that student needs more help (DON'T advance)
+        NEEDS_HELP = {
+            "confused", "confusing", "don't understand", "don't get it",
+            "what do you mean", "can you explain", "help", "unclear",
+            "lost", "wait", "hold on", "go back", "repeat", "again",
+            "not sure", "i don't know", "huh", "what", "why", "how",
+            "more", "example", "another"
+        }
+
+        def signals_ready() -> bool:
+            # Check for ready signals, but not if they also signal confusion
+            has_ready = any(signal in user_lower for signal in READY_SIGNALS)
+            has_help = any(signal in user_lower for signal in NEEDS_HELP)
+            return has_ready and not has_help
+
+        def gave_substantive_answer() -> bool:
+            # Student gave a real answer (not just "yes" or "ok")
+            return word_count >= 6
+
+        # ============================================================
+        # STEP 1: INITIAL_METAPHOR → STUDENT_METAPHOR
+        # Advance after AI gives opening metaphor and student responds
+        # ============================================================
         if self.current_step == ScaffoldStep.INITIAL_METAPHOR:
-            # Advance after AI gives their metaphor (at least 1 tutor message)
-            return self.step_message_count >= 1
+            return self.step_message_count >= 1  # AI spoke, any response advances
 
-        # 2. STUDENT METAPHOR → VISUAL DIAGRAM
+        # ============================================================
+        # STEP 2: STUDENT_METAPHOR → VISUAL_DIAGRAM
+        # Student shared metaphor, AI responded, student ready for visual
+        # ============================================================
         if self.current_step == ScaffoldStep.STUDENT_METAPHOR:
-            # Require at least 1 tutor response (gave code/connection/asked "ready?")
             if self.step_message_count < 1:
                 return False
+            return signals_ready()
 
-            # THEN check if student confirmed ready
-            affirmatives = ["yes", "yeah", "yep", "yup", "sure", "ok", "okay", "ready",
-                            "definitely", "totally", "absolutely", "cool", "great", "nice",
-                            "sounds good", "let's", "go", "show", "next"]
-            return any(term in user_lower for term in affirmatives)
-
-        # 3. VISUAL DIAGRAM → CODE STRUCTURE
+        # ============================================================
+        # STEP 3: VISUAL_DIAGRAM → CODE_STRUCTURE
+        # Visual shown, student indicates understanding
+        # ============================================================
         if self.current_step == ScaffoldStep.VISUAL_DIAGRAM:
-            # Require at least 1 tutor response (visual appeared with question)
             if self.step_message_count < 1:
                 return False
+            return signals_ready()
 
-            # Expanded affirmatives and understanding indicators
-            affirmatives = ["yes", "yeah", "yep", "sure", "ok", "okay", "got it",
-                            "makes sense", "i see", "helpful", "cool", "nice", "clear",
-                            "definitely", "totally", "understand", "understood", "yup",
-                            "show me", "next", "continue", "go ahead"]
-            return any(term in user_lower for term in affirmatives)
-
-        # 4. CODE STRUCTURE → CODE USAGE
+        # ============================================================
+        # STEP 4: CODE_STRUCTURE → CODE_USAGE
+        # AI shows code, student answers question OR says ready
+        # Let AI handle validation within the step
+        # ============================================================
         if self.current_step == ScaffoldStep.CODE_STRUCTURE:
-            # Require at least 1 tutor response (showed code + asked question)
             if self.step_message_count < 1:
                 return False
-
-            # Accept reasonable answers or affirmatives
-            affirmatives = ["yes", "sure", "ok", "okay", "got it", "makes sense",
-                            "cool", "nice", "next", "continue"]
-            answered = word_count >= 3  # "slow", "it's expensive", etc.
-            return any(term in user_lower for term in affirmatives) or answered
-
-        # 5. CODE USAGE → PRACTICE
-        if self.current_step == ScaffoldStep.CODE_USAGE:
-            # Require at least 1 tutor response (showed usage + asked question)
-            if self.step_message_count < 1:
-                return False
-
-            # Accept answers or affirmatives
-            affirmatives = ["yes", "sure", "ok", "okay", "ready", "let's", "go", "next"]
-            answered = word_count >= 4  # They gave an answer
-            return any(term in user_lower for term in affirmatives) or answered
-
-        # 6. PRACTICE → REFLECTION
-        if self.current_step == ScaffoldStep.PRACTICE:
-            # First check: Did we give the practice problem?
-            if self.step_message_count < 1:
-                return False
-
-            # After student answers problem (2+ words OR has numbers), advance to allow validation
-            if self.step_message_count == 1:
-                has_numbers = any(char.isdigit() for char in user_message)
-                answered = word_count >= 2 or has_numbers  # Changed from >= 5
-                if answered:
-                    return True
-
-            # After validation (2+ messages) and they said ready, advance to reflection
-            if self.step_message_count >= 2:
-                affirmatives = ["yes", "ready", "sure", "ok", "okay", "let's", "go"]
-                return any(term in user_lower for term in affirmatives)
-
+            # Advance if: ready signal, OR gave answer and AI validated (2+ msgs)
+            if signals_ready():
+                return True
+            if gave_substantive_answer() and self.step_message_count >= 2:
+                return True
             return False
 
-        # 7. REFLECTION → END
-        # flow_manager.py - REFLECTION advancement
+        # ============================================================
+        # STEP 5: CODE_USAGE → PRACTICE
+        # Same pattern as above
+        # ============================================================
+        if self.current_step == ScaffoldStep.CODE_USAGE:
+            if self.step_message_count < 1:
+                return False
+            if signals_ready():
+                return True
+            if gave_substantive_answer() and self.step_message_count >= 2:
+                return True
+            return False
+
+        # ============================================================
+        # STEP 6: PRACTICE → REFLECTION
+        # Must have: AI gives problem → student answers → AI validates → student ready
+        # Don't advance on bare "yes" if problem hasn't been answered
+        # ============================================================
+        if self.current_step == ScaffoldStep.PRACTICE:
+            if self.step_message_count < 2:
+                # Need at least: problem given + validation
+                # If student just says "yes" after 1 message, they're confirming
+                # they want to practice, NOT that they're done practicing
+                return False
+            # After 2+ AI messages (problem + validation), ready signal advances
+            return signals_ready()
+
+        # ============================================================
+        # STEP 7: REFLECTION → END
+        # Must have: AI asks for summary → student gives summary
+        # Don't advance on bare "yes" - need actual summary content
+        # ============================================================
         if self.current_step == ScaffoldStep.REFLECTION:
             if self.step_message_count < 1:
                 return False
-
-            # Advance after they give summary (8+ words) OR say they're done/good/ready
-            is_summary = word_count >= 8
-            is_done = any(term in user_lower for term in ["yes", "ready", "sure", "ok",
-                                                          "okay", "let's", "done", "good",
-                                                          "finished", "thanks", "thank you"])
-            return is_summary or is_done
+            # Only advance if student gave substantive content (actual summary)
+            # A bare "yes" should trigger AI to ask for summary
+            if gave_substantive_answer():
+                return True
+            # After 2+ messages AND ready signal, also advance
+            if self.step_message_count >= 2 and signals_ready():
+                return True
+            return False
 
         return False
 
@@ -144,8 +179,8 @@ class TutorFlow:
             old_step = self.current_step
             self.current_step = steps[idx + 1]
             self.step_message_count = 0
-            # Debug logging (optional - comment out in production)
-            # print(f"[FLOW] Advanced: {old_step.value} → {self.current_step.value}")
+            print(f"[FLOW] Advanced: {old_step.value} → {self.current_step.value}")
         else:
-            # Reached the end
-            self.completed = True
+            if not self.completed:
+                self.completed = True
+                print("[FLOW] Session completed!")

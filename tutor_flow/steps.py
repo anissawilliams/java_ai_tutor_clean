@@ -1,4 +1,7 @@
 # tutor_flow/steps.py
+"""
+Scaffold steps and message types.
+"""
 
 from __future__ import annotations
 from dataclasses import dataclass, field

@@ -1,12 +1,16 @@
 # views/learning.py
+"""
+Learning session view.
+UPDATED: Auto-generates initial message when session starts.
+"""
 
 import time
-
 import streamlit as st
 
 from utils.config import SESSION_DURATION
 from content.research_topics import get_research_topic
 from tutor_flow.handlers import (
+    generate_initial_message,
     handle_user_message_scaffolded,
     handle_user_message_direct,
 )
@@ -54,7 +58,6 @@ def render_learning_session():
     # Progress Indicator (Scaffolded Conditions Only)
     # -------------------------
     if condition in [1, 2] and hasattr(st.session_state, 'flow'):
-      # Only for scaffolded conditions
         from tutor_flow.steps import ScaffoldStep
 
         # Define step names for display
@@ -85,6 +88,41 @@ def render_learning_session():
         st.session_state.phase = "quiz"
         st.rerun()
 
+    # =========================================================
+    # AUTO-GENERATE INITIAL MESSAGE (if not already done)
+    # This ensures the AI speaks first without user prompting
+    # =========================================================
+    if condition in [1, 2]:
+        # Scaffolded conditions - check if flow has messages
+        if hasattr(st.session_state, 'flow') and len(st.session_state.flow.messages) == 0:
+            # No messages yet - generate the initial message
+            print("AUTO-GENERATING initial message...")
+            generate_initial_message(topic, condition)
+            st.rerun()  # Rerun to display the message
+    else:
+        # Direct chat condition - check if messages list is empty
+        if not st.session_state.get('messages') or len(st.session_state.messages) == 0:
+            # Initialize with a simple greeting
+            initial_msg = (
+                f"Hello! I'm here to help you learn about {topic.name}. "
+                f"Feel free to ask me any questions about {topic.name} in Java. "
+                "What would you like to know?"
+            )
+            st.session_state.messages = [{
+                "role": "assistant",
+                "content": initial_msg,
+                "timestamp": time.time(),
+            }]
+            # Save to database
+            from utils.database import save_message
+            save_message(
+                st.session_state.user_id,
+                st.session_state.current_session_id,
+                "assistant",
+                initial_msg
+            )
+            st.rerun()
+
     # -------------------------
     # Chat display
     # -------------------------
@@ -92,29 +130,28 @@ def render_learning_session():
     with top_content:
         st.title(f"**Topic:** {topic.name}")
         st.write(f"Let's learn about {topic.name} together!")
-
         st.write("---")
 
     chat_history_container = st.container()
 
-    # 3. Create a container for the Input (This "pins" it to the end of the history)
+    # Create a container for the Input (This "pins" it to the end of the history)
     input_container = st.container()
 
     with input_container:
         user_input = st.chat_input("Type your response...")
 
-    # 4. Render History INTO the history container
+    # Render History INTO the history container
     with chat_history_container:
         if condition in [1, 2]:
             for msg in st.session_state.flow.messages:
                 with st.chat_message(msg.role):
-                    st.write(msg.content)
+                    st.markdown(msg.content)
         else:
             for msg in st.session_state.messages:
                 with st.chat_message(msg["role"]):
-                    st.write(msg["content"])
+                    st.markdown(msg["content"])
 
-    # 5. Logic Handling
+    # Logic Handling
     if user_input:
         if condition in [1, 2]:
             handle_user_message_scaffolded(user_input)

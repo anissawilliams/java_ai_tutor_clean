@@ -1,13 +1,19 @@
+# tutor_flow/handlers.py
+"""
+Message handlers for the tutoring flow.
+SIMPLIFIED: Clean flow, let AI handle conversation nuance.
+"""
+
 import time
 import streamlit as st
-from utils.database import (
-    save_message,
-    save_scaffold_progress
-)
+from utils.database import save_message, save_scaffold_progress
 
 
 def generate_initial_message(topic, condition):
-    """Generate the initial learning message for scaffolded conditions."""
+    """
+    Generate the initial learning message for scaffolded conditions.
+    Called automatically when session starts.
+    """
     from characters import get_character
     from tutor_flow.step_guide import StepGuide
 
@@ -19,52 +25,22 @@ def generate_initial_message(topic, condition):
         system_prompt = character.get_system_prompt(topic.name)
     else:
         system_prompt = (
-            f"You are a helpful CS tutor teaching {topic.name}.\n\n"
-            "Your goal is to help the student understand the topic through:\n"
-            "1) metaphors and analogies\n"
-            "2) conceptual understanding\n"
-            "3) code examples\n"
-            "4) usage explanations\n\n"
-            "CRITICAL RULES:\n"
-            "- Give ONE focused explanation per response\n"
-            "- Do NOT repeat information from previous messages\n"
-            "- Move forward through the material, don't circle back\n"
-            "- If you already explained something, reference it briefly and move on\n"
-            "- Keep responses under 150 words\n"
-            "- Be clear and encouraging"
+            f"You are a friendly, encouraging CS tutor teaching {topic.name}.\n"
+            "Be conversational, warm, and clear. Keep responses focused and under 150 words."
         )
 
-    # Build intro + metaphor prompt
-    if condition == 1:
-        character_name = st.session_state.selected_character
-        intro_text = (
-            f"Hello! I'm {character_name}, and I'm here to help you understand {topic.name}.\n\n"
-            f"**What you'll learn:**\n"
-            f"{topic.concept}\n\n"
-            f"I'll guide you through this step-by-step. Let's start with a helpful way to think about this.\n\n"
-        )
-    else:
-        intro_text = (
-            f"Hello! Welcome to our session on {topic.name}.\n\n"
-            f"**Learning objective:**\n"
-            f"{topic.concept}\n\n"
-            f"I'll guide you through this using clear explanations and examples. Let's begin!\n\n"
-        )
+    # Get the metaphor prompt
+    metaphor_prompt = StepGuide.get_metaphor_prompt(topic)
 
-    metaphor_prompt = StepGuide.get_metaphor_prompt(
-        "Tutor", topic.name, topic.concept
-    )
-
-    full_prompt = intro_text + metaphor_prompt
-
-    # Generate message
+    # Generate the initial message
     try:
         initial_message = st.session_state.ai_client.generate_response(
             system_prompt=system_prompt,
-            user_message=full_prompt,
+            user_message=metaphor_prompt,
             temperature=0.9,
         )
-    except Exception:
+    except Exception as e:
+        print(f"ERROR generating initial message: {e}")
         initial_message = (
             f"Hello! Let's learn about {topic.name}.\n\n"
             f"**What we'll cover:** {topic.concept}\n\n"
@@ -72,10 +48,8 @@ def generate_initial_message(topic, condition):
             "What does this remind you of from your own experience?"
         )
 
-    # Add to flow
+    # Add to flow and save
     st.session_state.flow.add_message("assistant", initial_message)
-
-    # Save to database
     save_message(
         st.session_state.user_id,
         session_id,
@@ -83,10 +57,14 @@ def generate_initial_message(topic, condition):
         initial_message,
         step=st.session_state.flow.current_step.value,
     )
+    print(f"INITIAL MESSAGE generated for {topic.name}")
 
 
 def handle_user_message_scaffolded(user_input: str):
-    """Handle user message for scaffolded conditions (1 & 2)."""
+    """
+    Handle user message for scaffolded conditions (1 & 2).
+    Simple flow: record message → check advancement → generate response.
+    """
     from characters import get_character
     from tutor_flow.step_guide import StepGuide
     from tutor_flow.steps import ScaffoldStep
@@ -98,157 +76,180 @@ def handle_user_message_scaffolded(user_input: str):
     condition = st.session_state.condition
     session_id = st.session_state.current_session_id
 
-    # Add user message
+    # =========================================================
+    # 1. RECORD USER MESSAGE
+    # =========================================================
     flow.add_message("user", user_input)
     save_message(st.session_state.user_id, session_id, "user", user_input)
 
-    print(f"DEBUG: Current Step Before Advancement: {flow.current_step.value}")
+    print(f"\n{'=' * 50}")
+    print(f"USER: {user_input}")
+    print(f"STEP: {flow.current_step.value} (AI messages in step: {flow.step_message_count})")
 
-    # Step advancement - track if we just advanced to visual
-    just_advanced_to_visual = False
+    # =========================================================
+    # 2. CHECK FOR SESSION END CONDITIONS
+    # =========================================================
+
+    # Time-based end
+    start_time = st.session_state.get('start_time', time.time())
+    elapsed_minutes = (time.time() - start_time) / 60
+    if elapsed_minutes >= 15:
+        _end_session("time", flow, session_id)
+        return
+
+    # Natural completion (after reflection)
+    if st.session_state.get('ready_for_quiz', False):
+        _end_session("complete", flow, session_id)
+        return
+
+    # =========================================================
+    # 3. CHECK FOR STEP ADVANCEMENT
+    # =========================================================
+    advanced_to_visual = False
+
     if flow.should_advance_step(user_input):
         old_step = flow.current_step
         flow.advance_step()
-        save_scaffold_progress(
-            st.session_state.user_id,
-            session_id,
-            flow.current_step.value
-        )
-        print(f"DEBUG: Current Step After Advancement: {flow.current_step.value}")
+        save_scaffold_progress(st.session_state.user_id, session_id, flow.current_step.value)
+        print(f"ADVANCED: {old_step.value} → {flow.current_step.value}")
 
-        # Check if we just advanced TO visual diagram
         if flow.current_step == ScaffoldStep.VISUAL_DIAGRAM:
-            just_advanced_to_visual = True
+            advanced_to_visual = True
 
-    # Check for session completion EARLY - BEFORE generating responses
-    start_time = st.session_state.get('start_time', time.time())
-    elapsed_minutes = (time.time() - start_time) / 60
+        # Check if we completed reflection
+        if old_step == ScaffoldStep.REFLECTION and flow.completed:
+            st.session_state.ready_for_quiz = True
+            # Don't return yet - let AI give final response
 
-    # Only end session if time is up (not on flow.completed)
-    if elapsed_minutes >= 15:
-        if not st.session_state.get('quiz_ready', False):
-            final_message = (
-                "Time's up! Great work today. "
-                "Now let's test your knowledge with a quiz!"
-            )
-            flow.add_message("assistant", final_message)
-            save_message(
-                st.session_state.user_id,
-                session_id,
-                "assistant",
-                final_message,
-                step=flow.current_step.value,
-            )
-
-            st.session_state.quiz_ready = True
-            st.rerun()
+    # =========================================================
+    # 4. HANDLE VISUAL DIAGRAM (special case - pre-built content)
+    # =========================================================
+    if advanced_to_visual:
+        _show_visual_diagram(flow, topic, session_id)
         return
 
-    # Check if we're finishing REFLECTION step (natural completion)
-    if flow.current_step == ScaffoldStep.REFLECTION:
-        # Check if student said they're ready for quiz
-        if flow.should_advance_step(user_input):
-            if not st.session_state.get('quiz_ready', False):
-                final_message = (
-                    "Excellent! Let's move on to the quiz to test what you've learned!"
-                )
-                flow.add_message("assistant", final_message)
-                save_message(
-                    st.session_state.user_id,
-                    session_id,
-                    "assistant",
-                    final_message,
-                    step=flow.current_step.value,
-                )
+    # =========================================================
+    # 5. GENERATE AI RESPONSE
+    # =========================================================
+    _generate_response(flow, topic, condition, session_id, user_input)
 
-                st.session_state.quiz_ready = True
-                st.rerun()
-            return
+    # =========================================================
+    # 6. CHECK IF QUIZ READY (after AI responds)
+    # =========================================================
+    if st.session_state.get('ready_for_quiz', False):
+        # AI just gave final response, now we can transition
+        print("QUIZ: Ready flag set, will transition on next interaction")
 
-    # Handle VISUAL_DIAGRAM step - ONLY if we just advanced to it
-    if just_advanced_to_visual and flow.current_step == ScaffoldStep.VISUAL_DIAGRAM:
-        visual = get_topic_visual(st.session_state.current_session_id)
 
-        if topic.key == 'arraylist':
-            walkthrough = (
-                "Let me walk you through this:\n"
-                "- **Step 1**: The old array is full (4/4 elements)\n"
-                "- **Step 2**: Create a new, larger array (capacity 8)\n"
-                "- **Step 3**: Copy all elements to the new array\n"
-                "- **Step 4**: Add the new element (E)\n\n"
-                "Does this diagram help you see how the resizing works?"
-            )
-        else:  # recursion
-            walkthrough = (
-                "Let me walk you through this:\n"
-                "- **Building up**: Each call adds to the stack\n"
-                "- **Base case**: Stops the recursion (n=1)\n"
-                "- **Unwinding**: Stack returns values back up\n\n"
-                "Can you see how the stack builds up and then unwinds?"
-            )
+def _show_visual_diagram(flow, topic, session_id):
+    """Show the visual diagram for the current topic."""
+    from content.visuals import get_topic_visual
 
-        visual_message = (
-            "Perfect! Here's a visual diagram showing exactly how this works.\n\n"
-            f"📊 **Visual Diagram:**\n{visual}\n\n"
-            f"{walkthrough}"
+    visual = get_topic_visual(st.session_state.current_session_id)
+
+    if topic.key == 'arraylist':
+        walkthrough = (
+            "Let me walk you through this:\n"
+            "- **Step 1**: The old array is full (4/4 elements)\n"
+            "- **Step 2**: Create a new, larger array (capacity 8)\n"
+            "- **Step 3**: Copy all elements to the new array\n"
+            "- **Step 4**: Add the new element (E)\n\n"
+            "Does this help you see how the resizing works?"
         )
-
-        # Add message and save before returning
-        flow.add_message("assistant", visual_message)
-        save_message(
-            st.session_state.user_id,
-            session_id,
-            "assistant",
-            visual_message,
-            step=flow.current_step.value,
+    elif topic.key == 'recursion':
+        walkthrough = (
+            "Let me walk you through this:\n"
+            "- **Building up**: Each recursive call adds a frame to the stack\n"
+            "- **Base case (n=1)**: This is the 'stop sign' - recursion stops here\n"
+            "- **Unwinding**: Each frame returns its value back up the chain\n\n"
+            "Can you see how the stack builds up and then unwinds?"
         )
-        # Return immediately - visual message is complete
-        return
+    else:
+        walkthrough = "Does this diagram help you understand how it works?"
 
-    # Build response prompt FIRST
-    response_prompt = StepGuide.get_response_prompt(
-        "Tutor",
-        topic.name,
-        flow.current_step,
-        user_input,
-        flow.get_recent_context(5),
+    visual_message = (
+        "Great! Here's a visual diagram showing exactly how this works:\n\n"
+        f"📊 **Visual Diagram:**\n{visual}\n\n"
+        f"{walkthrough}"
     )
-    print(f"DEBUG: Response Prompt for {flow.current_step.value}:\n{response_prompt}\n")
 
-    # Build system prompt SECOND
+    flow.add_message("assistant", visual_message)
+    save_message(st.session_state.user_id, session_id, "assistant", visual_message,
+                 step=flow.current_step.value)
+    print(f"VISUAL shown for {topic.key}")
+
+
+def _generate_response(flow, topic, condition, session_id, user_input):
+    """Generate an AI response for the current step."""
+    from characters import get_character
+    from tutor_flow.step_guide import StepGuide
+
+    # Get the response prompt (includes context and instructions)
+    response_prompt = StepGuide.get_response_prompt(
+        topic=topic,
+        current_step=flow.current_step,
+        user_input=user_input,
+        context_messages=flow.get_recent_context(5),
+    )
+
+    print(f"PROMPT:\n{response_prompt[:200]}...")
+
+    # Build system prompt
     if condition == 1:
         character = get_character(st.session_state.selected_character)
         system_prompt = character.get_system_prompt(topic.name)
     else:
-        system_prompt = f"You are a helpful CS tutor teaching {topic.name}."
+        system_prompt = (
+            f"You are a helpful, encouraging CS tutor teaching {topic.name}.\n"
+            "Be conversational and clear. Validate student answers explicitly.\n"
+            "Keep responses focused and under 150 words."
+        )
 
     # Build conversation history
-    recent_messages = flow.get_recent_context(5)
     conversation_history = [
         {"role": m.role, "content": m.content}
-        for m in recent_messages[:-1]
+        for m in flow.get_recent_context(5)[:-1]
     ]
 
     # Generate response
     try:
         response = st.session_state.ai_client.generate_response(
             system_prompt=system_prompt,
-            user_message=f"{response_prompt}\n\nStudent said: {user_input}",
+            user_message=response_prompt,
             conversation_history=conversation_history,
         )
-
-    except Exception:
+    except Exception as e:
+        print(f"ERROR: {e}")
         response = "I'm having trouble responding. Could you try rephrasing that?"
 
-    # Add response
+    # Record response
     flow.add_message("assistant", response)
-    save_message(
-        st.session_state.user_id,
-        session_id,
-        "assistant",
-        response,
-        step=flow.current_step.value,
-    )
+    save_message(st.session_state.user_id, session_id, "assistant", response,
+                 step=flow.current_step.value)
+    print(f"AI: {response[:100]}...")
+
+
+def _end_session(reason, flow, session_id):
+    """End the session and transition to quiz."""
+    if st.session_state.get('quiz_ready', False):
+        return
+
+    if reason == "time":
+        final_message = (
+            "⏰ Time's up! Great work today. Let's see what you learned - quiz time!"
+        )
+    else:
+        final_message = (
+            "🎉 Excellent work! You've completed the lesson. Ready for the quiz!"
+        )
+
+    flow.add_message("assistant", final_message)
+    save_message(st.session_state.user_id, session_id, "assistant", final_message,
+                 step=flow.current_step.value)
+
+    st.session_state.quiz_ready = True
+    print(f"SESSION ENDED: {reason}")
+    st.rerun()
 
 
 def handle_user_message_direct(user_input: str):
@@ -266,22 +267,19 @@ def handle_user_message_direct(user_input: str):
     })
     save_message(st.session_state.user_id, session_id, "user", user_input)
 
-    # Check for session completion
+    # Check time
     start_time = st.session_state.get('start_time', time.time())
     elapsed_minutes = (time.time() - start_time) / 60
 
     if elapsed_minutes >= 15:
         if not st.session_state.get('quiz_ready', False):
-            final_message = (
-                "Thanks for chatting! Time's up - let's test your knowledge with a quiz."
-            )
+            final_message = "Time's up! Let's test your knowledge with a quiz."
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": final_message,
                 "timestamp": time.time(),
             })
             save_message(st.session_state.user_id, session_id, "assistant", final_message)
-
             st.session_state.quiz_ready = True
             st.rerun()
         return
@@ -292,10 +290,10 @@ def handle_user_message_direct(user_input: str):
         for m in st.session_state.messages[-10:]
     ]
 
-    # Simple system prompt
+    # System prompt
     system_prompt = (
-        f"You are a helpful assistant answering questions about {topic.name} in Java.\n\n"
-        "Provide clear, accurate answers. Include code examples when helpful. Be concise."
+        f"You are a helpful assistant teaching {topic.name} in Java.\n"
+        "Be clear, include code examples when helpful, and be concise."
     )
 
     # Generate response
@@ -306,9 +304,8 @@ def handle_user_message_direct(user_input: str):
             conversation_history=conversation_history,
         )
     except Exception:
-        response = "I'm having trouble responding. Could you try rephrasing that?"
+        response = "I'm having trouble responding. Could you try rephrasing?"
 
-    # Add response
     st.session_state.messages.append({
         "role": "assistant",
         "content": response,
