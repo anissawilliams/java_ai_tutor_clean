@@ -1,179 +1,201 @@
-from typing import List
+# tutor_flow/step_guide.py
+"""
+Generates prompts for each scaffold step.
+SIMPLIFIED: Give AI clear context and goals, trust it to execute well.
+"""
+
+from typing import List, Optional
 from .steps import ScaffoldStep, ConversationMessage
 
 
 class StepGuide:
     """
-    Generates system instructions for each scaffold step.
-    POLISHED VERSION with smooth transitions and validation.
+    Generates AI prompts for each scaffold step.
+    Focus: Clear goals + context. Let AI handle the conversation naturally.
     """
 
     @staticmethod
-    def get_metaphor_prompt(role: str, topic_name: str, topic_concept: str) -> str:
-        """Prompt for the initial metaphor generation."""
+    def get_metaphor_prompt(topic) -> str:
+        """Generate the initial metaphor prompt."""
         return (
-            f"Explain {topic_name} using a clear, non-technical metaphor.\n"
-            f"Concept to cover: {topic_concept}\n"
-            "Compare the technical concept to a real-world object or situation.\n"
-            "End by asking the student what this reminds them of from their own experience."
+            f"You are starting a tutoring session on {topic.name}.\n\n"
+            f"CONCEPT: {topic.concept}\n\n"
+            f"METAPHOR TO USE:\n{topic.metaphor_prompt}\n\n"
+            "YOUR TASK:\n"
+            "1. Introduce yourself briefly\n"
+            "2. Explain the concept using the metaphor above\n"
+            "3. End by asking: 'What does this remind you of from your own experience?'\n\n"
+            "Keep it warm and under 150 words."
         )
 
     @staticmethod
     def get_response_prompt(
-            role: str,
-            topic_name: str,
+            topic,
             current_step: ScaffoldStep,
             user_input: str,
-            context_messages: List[ConversationMessage]
+            context_messages: List[ConversationMessage],
     ) -> str:
         """
-        Returns the specific instruction for the current step.
-        POLISHED with clear transitions and validation.
+        Generate a prompt based on current step and conversation context.
+
+        The AI should:
+        - Respond naturally to what the student said
+        - Accomplish the goal for this step
+        - Transition smoothly to the next topic when appropriate
         """
 
-        # 1. INITIAL METAPHOR (AI gives their metaphor first)
+        # Get topic-specific guidance
+        step_key = current_step.value
+        topic_guidance = topic.instructions.get(step_key, "")
+        if topic_guidance:
+            topic_guidance = topic_guidance.replace("{metaphor_prompt}", topic.metaphor_prompt)
+            topic_guidance = topic_guidance.replace("{agent_crisis}", topic.agent_crisis)
+            topic_guidance = topic_guidance.replace("{agent_solution}", topic.agent_solution)
+            topic_guidance = topic_guidance.replace("{topic_name}", topic.name)
+            topic_guidance = topic_guidance.replace("{code_focus}", topic.code_focus)
+
+        # Build context from recent messages
+        recent_context = ""
+        if context_messages:
+            recent_context = "RECENT CONVERSATION:\n"
+            for msg in context_messages[-3:]:
+                role = "Student" if msg.role == "user" else "You"
+                recent_context += f"{role}: {msg.content[:100]}...\n"
+
+        # ============================================================
+        # STEP-SPECIFIC PROMPTS
+        # ============================================================
+
         if current_step == ScaffoldStep.INITIAL_METAPHOR:
             return (
-                f"Explain {topic_name} using a clear, non-technical metaphor.\n"
-                "Compare the technical concept to a real-world object or situation.\n"
-                "End by asking the student what this reminds them of from their own experience."
+                f"Continue teaching {topic.name}.\n\n"
+                f"Student said: \"{user_input}\"\n\n"
+                f"TOPIC GUIDANCE:\n{topic_guidance}\n\n"
+                "Respond to what they said and continue with the metaphor explanation.\n"
+                "End by asking what this reminds them of from their experience."
             )
 
-        # 2. STUDENT METAPHOR (Student gave theirs, AI responds with code)
         if current_step == ScaffoldStep.STUDENT_METAPHOR:
             return (
-                "The student shared their metaphor/analogy.\n\n"
-                "You MUST do ALL FOUR of these:\n"
-                "1. Acknowledge warmly: 'Perfect analogy!' or 'Great example!'\n"
-                "2. Connect their metaphor to Dynamic ArrayLists (1-2 sentences):\n"
-                "   'Just like your expandable suitcase, a Dynamic ArrayList...'\n"
-                "3. Show a tiny code snippet (3-5 lines) that illustrates the concept:\n"
-                "   ```java\n"
-                "   ArrayList<String> items = new ArrayList<>();\n"
-                "   items.add(\"item1\"); // starts small, auto-expands!\n"
-                "   ```\n"
-                "4. End with: 'Ready to see how this works visually?'\n\n"
-                "CRITICAL: Include ALL steps. Keep total response under 120 words."
+                f"TOPIC: {topic.name}\n\n"
+                f"The student shared their own metaphor or example:\n"
+                f"\"{user_input}\"\n\n"
+                f"TOPIC GUIDANCE:\n{topic_guidance}\n\n"
+                "YOUR RESPONSE MUST:\n"
+                "1. Acknowledge their metaphor warmly and connect it to the concept\n"
+                "2. Introduce the key challenge/crisis:\n"
+                f"   \"{topic.agent_crisis}\"\n"
+                "3. End with: 'Ready to see how this works visually?'\n\n"
+                "NO CODE YET. Keep under 100 words."
             )
 
-        # 3. VISUAL DIAGRAM
         if current_step == ScaffoldStep.VISUAL_DIAGRAM:
             return (
-                "The visual diagram already appeared WITH step-by-step walkthrough.\n"
-                "The student is responding to: 'Does this diagram help you see how it works?'\n\n"
-                "If they said yes/got it:\n"
-                "'Excellent! Now let's look at the actual Java code that does this...'\n\n"
-                "Do NOT:\n"
-                "- Re-show the visual\n"
-                "- Re-explain the steps\n"
-                "- Repeat anything\n\n"
-                "Just give ONE transition sentence to code. That's it."
+                f"TOPIC: {topic.name}\n\n"
+                "A visual diagram was just shown to the student.\n"
+                f"Student said: \"{user_input}\"\n\n"
+                f"TOPIC GUIDANCE:\n{topic_guidance}\n\n"
+                "YOUR RESPONSE:\n"
+                "- If they're confused: Explain the diagram more clearly\n"
+                "- If they understand: Acknowledge and transition to code\n"
+                "- Say: 'Now let's look at the actual code...'\n\n"
+                "Keep under 75 words."
             )
 
-        # 4. CODE STRUCTURE
         if current_step == ScaffoldStep.CODE_STRUCTURE:
             return (
-                "DO NOT ASK QUESTIONS. DO NOT RECAP.\n\n"
-                "Show ONLY this code:\n\n"
-                "```java\n"
-                "private void resize() {\n"
-                "  Object[] newArray = new Object[capacity * 2];\n"
-                "  for (int i = 0; i < size; i++) { // ← KEY LINE\n"
-                "    newArray[i] = internalArray[i];\n"
-                "  }\n"
-                "  internalArray = newArray;\n"
-                "}\n"
-                "```\n\n"
-                "Say: 'Notice the for-loop? It copies EVERY element. "
-                "What happens with 1000 elements?'\n\n"
-                "That's it. 100 words max."
+                f"TOPIC: {topic.name}\n\n"
+                f"Student said: \"{user_input}\"\n\n"
+                f"{recent_context}\n"
+                f"TOPIC GUIDANCE:\n{topic_guidance}\n\n"
+                f"CODE FOCUS: {topic.code_focus}\n\n"
+                "YOUR TASK (based on conversation state):\n"
+                "- If you haven't shown code yet: Show the INTERNAL implementation code, "
+                "highlight the key parts, and ask a question about it.\n"
+                "- If student answered your question: Validate their answer (RIGHT/WRONG), "
+                "explain briefly, then ask 'Ready to see how to use this?'\n"
+                "- If student is confused: Clarify without repeating everything.\n\n"
+                "Keep under 150 words."
             )
 
-        # 5. CODE USAGE
         if current_step == ScaffoldStep.CODE_USAGE:
             return (
-                "Brief validation (1 sentence).\n\n"
-                "Show usage:\n"
-                "```java\n"
-                "ArrayList<String> items = new ArrayList<>();\n"
-                "items.add(\"A\");\n"
-                "items.add(\"B\");\n"
-                "```\n\n"
-                "Say: 'Let's practice with a scenario...'\n\n"
-                "Under 75 words. NO questions."
+                f"TOPIC: {topic.name}\n\n"
+                f"Student said: \"{user_input}\"\n\n"
+                f"{recent_context}\n"
+                f"TOPIC GUIDANCE:\n{topic_guidance}\n\n"
+                "YOUR TASK (based on conversation state):\n"
+                "- If you haven't shown usage code: Show simple USAGE examples, "
+                "explain how it works from the user's perspective, ask a question.\n"
+                "- If student answered your question: Validate their answer, "
+                "then ask 'Ready to practice with a scenario?'\n"
+                "- If student says ready: Confirm and prepare to move on.\n\n"
+                "Keep under 120 words."
             )
 
-        # 6. PRACTICE
-        # step_guide.py - PRACTICE section
         if current_step == ScaffoldStep.PRACTICE:
-            user_lower = user_input.lower()
-            has_numbers = any(char.isdigit() for char in user_input)
-            # Check word count - but make sure it's a substantial answer
-            user_answered = len(user_input.split()) >= 2 or has_numbers
+            # Check if student just said a short affirmative vs gave a real answer
+            is_just_affirmative = len(user_input.split()) <= 2
 
-            # Check if they're indicating readiness to move on (after validation)
-            readiness_keywords = ["ready", "sure", "ok", "okay", "yes", "let's", "go"]
-            is_ready = any(keyword in user_lower for keyword in readiness_keywords)
-
-            # If they answered with substance (not just "yes"), validate
-            if user_answered and not is_ready:
-                # They answered the practice problem - VALIDATE IT
+            if is_just_affirmative:
                 return (
-                    "The student just answered your practice scenario.\n\n"
-                    "CRITICAL VALIDATION STEPS:\n"
-                    "1. Tell them if they're RIGHT or WRONG\n"
-                    "   - If RIGHT: 'Exactly correct!'\n"
-                    "   - If WRONG: 'Not quite...'\n\n"
-                    "2. Explain the correct answer:\n"
-                    "   - Walk through what happens step-by-step\n"
-                    "   - Keep it under 75 words\n\n"
-                    "3. Ask: 'Ready to summarize what you learned today?'\n\n"
-                    "Do NOT skip validation. Students need to know if they got it right."
+                        f"TOPIC: {topic.name}\n\n"
+                        "STUDENT JUST SAID: \"" + user_input + "\" (this is just an affirmative, NOT an answer)\n\n"
+                                                               "YOU MUST NOW GIVE A PRACTICE PROBLEM.\n\n"
+                                                               "Create a simple scenario like:\n"
+                                                               "'Let's practice! If you call factorial(4), walk me through what happens step by step. "
+                                                               "What does the call stack look like?'\n\n"
+                                                               "DO NOT praise them for a summary they didn't give.\n"
+                                                               "DO NOT say 'Great job!' - they haven't done anything yet.\n"
+                                                               "JUST GIVE THE PRACTICE PROBLEM.\n"
+                                                               "Keep under 75 words."
                 )
             else:
-                # First time at this step OR they said they're ready
-                # Give the practice problem
                 return (
-                    "Give a simple word problem - NO CODE.\n\n"
-                    "CRITICAL: Do NOT show any Java code. Just give numbers.\n\n"
-                    "Example format:\n"
-                    "'Let's practice! Imagine:\n"
-                    "- Current capacity: 8\n"
-                    "- Current size: 7\n"
-                    "- We add 2 new elements\n\n"
-                    "What happens internally?'\n\n"
-                    "Use different numbers than the example.\n"
-                    "Keep it to 3-4 lines maximum.\n"
-                    "NO CODE. Just the scenario and question."
+                    f"TOPIC: {topic.name}\n\n"
+                    f"Student answered your practice problem: \"{user_input}\"\n\n"
+                    "VALIDATE THEIR ANSWER:\n"
+                    "1. Say 'Correct!' or 'Not quite...'\n"
+                    "2. Briefly explain (2 sentences max)\n"
+                    "3. Say: 'Ready to summarize what you learned?'\n\n"
+                    "Keep under 75 words."
                 )
 
-        # 7. REFLECTION
         if current_step == ScaffoldStep.REFLECTION:
-            user_word_count = len(user_input.split())
+            # Check if student just said a short affirmative vs gave a real summary
+            word_count = len(user_input.split())
+            is_just_affirmative = word_count <= 3
 
-            # Check if they just said "yes/ready" vs actually gave a summary
-            if user_word_count < 8:
-                # They just said "yes" - ask for the actual summary
+            if is_just_affirmative:
                 return (
-                    "The student said they're ready to summarize.\n\n"
-                    "Now ask them to give their summary:\n"
-                    "'Great! In your own words, what did you learn about "
-                    "how ArrayLists work internally?'\n\n"
-                    "Keep it brief and encouraging."
+                        f"TOPIC: {topic.name}\n\n"
+                        "STUDENT JUST SAID: \"" + user_input + "\" (this is just an affirmative, NOT a summary)\n\n"
+                                                               "YOU MUST NOW ASK FOR THEIR SUMMARY.\n\n"
+                                                               "Say exactly: 'In your own words, what did you learn about " + topic.name + " today? "
+                                                                                                                                           "What is the base case and why is it important?'\n\n"
+                                                                                                                                           "DO NOT say 'Great summary!' - they haven't given one yet.\n"
+                                                                                                                                           "DO NOT move to quiz yet.\n"
+                                                                                                                                           "JUST ASK THE QUESTION.\n"
+                                                                                                                                           "Keep under 50 words."
                 )
             else:
-                # They gave a real summary - validate and wrap up
                 return (
-                    "The student gave their summary.\n\n"
-                    "Final response structure:\n"
-                    "1. Validate: 'Perfect!' or 'Exactly!'\n"
-                    "2. Add final insight:\n"
-                    "   'Understanding this hidden work makes you a better programmer - "
-                    "   you'll know when to use ArrayList and when not to.'\n"
-                    "3. Ask: 'Ready for the quiz?'\n\n"
-                    "Keep under 75 words total.\n"
-                    "This is the wrap-up - make it encouraging and ask if ready for quiz."
+                    f"TOPIC: {topic.name}\n\n"
+                    f"Student gave their summary: \"{user_input}\"\n\n"
+                    "THIS IS THEIR SUMMARY. ACCEPT IT.\n\n"
+                    "Say:\n"
+                    "1. 'Excellent summary!' (or similar praise)\n"
+                    "2. One specific thing they got right\n"
+                    "3. 'You're ready for the quiz!'\n\n"
+                    "DO NOT ask follow-up questions.\n"
+                    "DO NOT ask them to expand.\n"
+                    "THIS IS THE END OF THE LESSON.\n"
+                    "Keep under 60 words."
                 )
 
         # Fallback
-        return f"Continue teaching {topic_name}. Be helpful and encouraging."
+        return (
+            f"Continue teaching {topic.name}.\n"
+            f"Student said: \"{user_input}\"\n\n"
+            "Respond helpfully and keep the lesson moving forward."
+        )
