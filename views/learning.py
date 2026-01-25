@@ -153,8 +153,9 @@ def render_learning_session():
 
     # Logic Handling
     if user_input:
-        if condition in [1, 2]:
-            handle_user_message_scaffolded(user_input)
-        else:
-            handle_user_message_direct(user_input)
+        with st.spinner("Thinking..."):
+            if condition in [1, 2]:
+                handle_user_message_scaffolded(user_input)
+            else:
+                handle_user_message_direct(user_input)
         st.rerun()
