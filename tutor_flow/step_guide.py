@@ -68,25 +68,26 @@ class StepGuide:
 
         if current_step == ScaffoldStep.INITIAL_METAPHOR:
             return (
-                f"Continue teaching {topic.name}.\n\n"
+                f"TOPIC: {topic.name}\n\n"
                 f"Student said: \"{user_input}\"\n\n"
                 f"TOPIC GUIDANCE:\n{topic_guidance}\n\n"
-                "Respond to what they said and continue with the metaphor explanation.\n"
-                "End by asking what this reminds them of from their experience."
+                "Respond to what they said and continue explaining the metaphor.\n"
+                "End by asking what this reminds them of from their experience.\n"
+                "Keep under 100 words."
             )
 
         if current_step == ScaffoldStep.STUDENT_METAPHOR:
             return (
                 f"TOPIC: {topic.name}\n\n"
-                f"The student shared their own metaphor or example:\n"
-                f"\"{user_input}\"\n\n"
+                f"Student said: \"{user_input}\"\n\n"
+                f"{recent_context}\n"
                 f"TOPIC GUIDANCE:\n{topic_guidance}\n\n"
-                "YOUR RESPONSE MUST:\n"
-                "1. Acknowledge their metaphor warmly and connect it to the concept\n"
-                "2. Introduce the key challenge/crisis:\n"
-                f"   \"{topic.agent_crisis}\"\n"
-                "3. End with: 'Ready to see how this works visually?'\n\n"
-                "NO CODE YET. Keep under 100 words."
+                "WHAT TO DO:\n"
+                "- If student shared a metaphor/example earlier and now says 'sure', 'yes', 'ready': "
+                "They're ready for the visual! Say: 'Great! Let me show you a visual...'\n"
+                "- If student just shared a new metaphor/example: Acknowledge it warmly, connect to the concept, "
+                f"then introduce the crisis: \"{topic.agent_crisis}\" and ask 'Ready to see how this works visually?'\n\n"
+                "Keep under 100 words."
             )
 
         if current_step == ScaffoldStep.VISUAL_DIAGRAM:
