@@ -71,13 +71,18 @@ def render_learning_session():
             ScaffoldStep.REFLECTION: "Summary & Wrap-up"
         }
 
-        current_step_name = step_names.get(st.session_state.flow.current_step, "Learning")
-        steps_list = list(ScaffoldStep)
-        current_index = steps_list.index(st.session_state.flow.current_step)
-        progress = (current_index + 1) / len(steps_list)
+        try:
+            current_step_name = step_names.get(st.session_state.flow.current_step, "Learning")
+            steps_list = list(ScaffoldStep)
+            current_index = steps_list.index(st.session_state.flow.current_step)
+            progress = (current_index + 1) / len(steps_list)
 
-        st.progress(progress, text=f"**Step {current_index + 1}/7:** {current_step_name}")
-        st.caption("💡 We'll guide you through 7 steps to help you understand this topic deeply.")
+            st.progress(progress, text=f"**Step {current_index + 1}/7:** {current_step_name}")
+            st.caption("💡 We'll guide you through 7 steps to help you understand this topic deeply.")
+        except (ValueError, AttributeError):
+            # Session state has stale enum - show generic progress
+            st.progress(0.5, text="**Learning in progress...**")
+            st.caption("💡 We'll guide you through 7 steps to help you understand this topic deeply.")
 
     st.write("---")
 
