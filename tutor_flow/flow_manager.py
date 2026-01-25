@@ -3,6 +3,7 @@
 Manages the scaffolded tutoring flow.
 SIMPLIFIED: Trust the AI to handle conversation flow within each step.
 Advancement is based on simple rules, not complex state tracking.
+
 """
 
 from __future__ import annotations
