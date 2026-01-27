@@ -86,8 +86,11 @@ class TutorFlow:
         # STEP 1: INITIAL_METAPHOR → STUDENT_METAPHOR
         # Advance after AI gives opening metaphor and student responds
         # ============================================================
+
         if self.current_step == ScaffoldStep.INITIAL_METAPHOR:
-            return self.step_message_count >= 1  # AI spoke, any response advances
+            # Advance after student gives their metaphor (at least 10 characters)
+            # At least 5 characters OR 2+ words
+            return len(user_message.strip()) > 5 or len(user_message.split()) >= 2  # AI spoke, any response advances
 
         # ============================================================
         # STEP 2: STUDENT_METAPHOR → VISUAL_DIAGRAM
