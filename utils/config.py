@@ -10,7 +10,7 @@ SURVEY_TIME_ESTIMATE = 5 * 60  # ~3 minutes for survey
 
 # Session Available Dates
 SESSION_1_START = '2026-01-22'
-SESSION_2_START = '2026-01-23'
+SESSION_2_START = '2026-01-29'
 
 
 # Study Configuration
