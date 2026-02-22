@@ -24,19 +24,7 @@ CONDITIONS = {
     3: "direct_chat"                # Control: No Character, No Scaffolding
 }
 
-# Manual Condition Assignments
-# Add student emails here with their assigned condition
-MANUAL_CONDITION_ASSIGNMENTS = {
-    # Example:
-    # "student1@cofc.edu": 1,
-    # "student2@cofc.edu": 2,
-    # "student3@cofc.edu": 3,
-    
-    # Researcher/testing accounts (you can delete these from Firebase later)
-    "anissawilliamschs@gmail.com": 1,
-    "anissaewilliams@gmail.com": 2,
-    "hashemi@cofc.edu": 1,
-}
+
 
 # Session Sequence
 SESSIONS = {

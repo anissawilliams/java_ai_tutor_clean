@@ -24,7 +24,7 @@ class SimpleAIClient:
             raise ValueError("OPENAI_API_KEY not configured")
 
         self.client = OpenAI(api_key=api_key)
-        self.model = "gpt-4o-mini"  # or whatever you prefer
+        self.model = "gpt-4o-mini"
 
     def generate_response(self, system_prompt: str, user_message: str,
                           conversation_history: Optional[List[Dict]] = None,

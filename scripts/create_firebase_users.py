@@ -239,27 +239,94 @@ def export_credentials(results, output_file='user_credentials.csv'):
         print(f"\n💾 Credentials exported to: {output_file}")
 
 
+def count_users_by_condition():
+    """Count users by condition"""
+    users = db.reference('users').get() or {}
+    admins_emails = ["anissaewilliams@gmail.com", "anissawilliamschs@gmail.com",
+                     "hashemin@cofc.edu", "rashidp@cofc.edu", "tiwaria@cofc.edu"]
+    counts = {}
+
+    for user in users.values():  # <-- iterate over values, not keys
+        if user.get('email') not in admins_emails:
+            condition = user.get('condition')
+            if condition:
+                counts[condition] = counts.get(condition, 0) + 1
+
+    return counts
+
+
+
+
 # ============================================================================
 # USAGE EXAMPLES
 # ============================================================================
 
+def create_single_user(email, condition, password="Cougars2026"):
+    """Create a single user with given email and condition"""
+    try:
+        # Create in Firebase Auth
+        user = auth.create_user(
+            email=email,
+            password=password,
+            email_verified=False
+        )
+
+        # Add to database
+        user_ref = db.reference(f'users/{user.uid}')
+        user_ref.set({
+            'email': email,
+            'condition': condition,
+            'condition_name': get_condition_name(condition),
+            'assigned_date': pd.Timestamp.now().isoformat(),
+            'sessions': {
+                'arraylist': {'status': 'not_started'},
+                'recursion': {'status': 'not_started'}
+            }
+        })
+
+        print(f"✅ Created: {email} → Condition {condition} (Password: {password})")
+        return user.uid
+
+    except auth.EmailAlreadyExistsError:
+        print(f"⚠️  User already exists: {email}")
+        return None
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return None
+
+
 if __name__ == "__main__":
-    
-    # Initialize Firebase
     init_firebase()
-    
-    # OPTION 1: From CSV file
-    #csv_file = sys.argv[1] if len(sys.argv) > 1 else 'test_user_load.csv'
-    csv_file = 'section2_cleaned.csv'
-    results = create_users_from_csv(csv_file, default_password='Cougars2026')
-    
-    # OPTION 2: From Excel file
-    # results = create_users_from_excel('students.xlsx', default_password='JavaStudy2025')
-    
-    # Print summary
-    print_summary(results)
-    
-    # Export credentials
-    export_credentials(results, 'created_users_section_2.csv')
-    
-    print("\n✅ Done! Users can now login with their email and password: Cougars2026")
+
+    if len(sys.argv) >= 3:
+        # Usage: python create_firebase_users.py email@example.com 1
+        email = sys.argv[1]
+        condition = int(sys.argv[2])
+        create_single_user(email, condition)
+    else:
+        # Default: show counts
+        print(count_users_by_condition())
+
+
+# if __name__ == "__main__":
+#
+#     # Initialize Firebase
+#     init_firebase()
+#     print("User condition counts")
+
+#     print(count_users_by_condition())
+#     # # OPTION 1: From CSV file
+#     # #csv_file = sys.argv[1] if len(sys.argv) > 1 else 'test_user_load.csv'
+#     # csv_file = 'section2_cleaned.csv'
+#     # results = create_users_from_csv(csv_file, default_password='Cougars2026')
+#     #
+#     # # OPTION 2: From Excel file
+#     # # results = create_users_from_excel('students.xlsx', default_password='JavaStudy2025')
+#     #
+#     # # Print summary
+#     # print_summary(results)
+#     #
+#     # # Export credentials
+#     # export_credentials(results, 'created_users_section_2.csv')
+#
+#     #print("\n✅ Done! Users can now login with their email and password: Cougars2026")

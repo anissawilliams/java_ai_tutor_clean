@@ -7,8 +7,6 @@ import streamlit as st
 from typing import Dict
 
 
-# TODO: Refine these based on research goals
-
 SURVEY_QUESTIONS = {
     'learning_helpfulness': {
         'text': 'This tool helped me understand {topic} better than traditional methods (lecture, textbook, etc.)',
