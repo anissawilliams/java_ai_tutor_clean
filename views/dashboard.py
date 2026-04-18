@@ -5,7 +5,8 @@ import streamlit as st
 from datetime import datetime
 
 from utils.config import (
-    SESSION_DURATION, CONDITIONS, SESSIONS, STUDY_INFO, SESSION_1_START, SESSION_2_START
+    SESSION_DURATION, CONDITIONS, SESSIONS, STUDY_INFO,
+    SESSION_1_START, SESSION_2_START, SESSION_3_START
 )
 
 from utils.auth import logout_user, get_user_data
@@ -35,19 +36,13 @@ def render_dashboard():
 
     st.session_state.condition = condition
 
-    # Study info
-    # with st.expander("ℹ️ About This Study"):
-    #     st.write(STUDY_INFO["description"])
-    #     st.write(f"**Estimated time:** {STUDY_INFO['estimated_time']}")
-    #     # Don't show condition to students - keep it blind
-
     st.write("---")
 
     # Next session
     next_session = get_next_session(st.session_state.user_id)
 
     if next_session is None:
-        st.success("🎉 You've completed both sessions!")
+        st.success("🎉 You've completed all of the sessions!")
         st.balloons()
         st.write("Thank you for participating in our research study!")
         st.write("Your responses have been recorded.")
@@ -60,7 +55,7 @@ def render_dashboard():
     # Session cards
     st.subheader("Your Sessions")
 
-    for session_key in ["session_1", "session_2"]:
+    for session_key in ["session_1", "session_2", "session_3"]:
         session_config = SESSIONS[session_key]
         session_id = session_config["id"]
         status = get_session_status(st.session_state.user_id, session_id)
@@ -69,11 +64,12 @@ def render_dashboard():
         start_date = datetime.strptime(session_config["start_date"], '%Y-%m-%d')
         is_available = datetime.now() >= start_date
 
+        # Check prerequisite completion if required
         if is_available and "requires_completion" in session_config:
             required = session_config["requires_completion"]
             required_status = get_session_status(
                 st.session_state.user_id,
-                SESSIONS["session_1"]["id"],
+                SESSIONS[required]["id"],  # use the actual required session
             )
             if required_status != "completed":
                 is_available = False
@@ -84,7 +80,6 @@ def render_dashboard():
             with col1:
                 st.write(f"### {session_config['name']}")
                 st.write(session_config["description"])
-                #st.caption(f"Difficulty: {session_config['difficulty']}")
 
             with col2:
                 if status == "completed":
@@ -115,7 +110,7 @@ def render_dashboard():
 def render_character_selection():
     """Render character selection (Condition 1 only)."""
     from tutor_flow.handlers import generate_initial_message
-    
+
     st.title("Choose Your Tutor")
 
     topic = get_research_topic(st.session_state.current_session_id)
@@ -143,7 +138,7 @@ def render_character_selection():
 def start_session(session_id: str):
     """Initialize a learning session."""
     from tutor_flow.handlers import generate_initial_message
-    
+
     topic = get_research_topic(session_id)
     condition = st.session_state.condition
 

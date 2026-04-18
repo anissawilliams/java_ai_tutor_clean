@@ -118,10 +118,10 @@ class TutorFlow:
         if self.current_step == ScaffoldStep.CODE_STRUCTURE:
             if self.step_message_count < 1:
                 return False
-            # Advance if: ready signal, OR gave answer and AI validated (2+ msgs)
+            # Advance if: ready signal, OR gave substantive answer after code shown
             if signals_ready():
                 return True
-            if gave_substantive_answer() and self.step_message_count >= 2:
+            if gave_substantive_answer():
                 return True
             return False
 
@@ -134,7 +134,7 @@ class TutorFlow:
                 return False
             if signals_ready():
                 return True
-            if gave_substantive_answer() and self.step_message_count >= 2:
+            if gave_substantive_answer():
                 return True
             return False
 

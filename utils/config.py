@@ -11,6 +11,7 @@ SURVEY_TIME_ESTIMATE = 5 * 60  # ~3 minutes for survey
 # Session Available Dates
 SESSION_1_START = '2026-01-22'
 SESSION_2_START = '2026-01-29'
+SESSION_3_START = '2026-04-13'
 
 
 # Study Configuration
@@ -23,6 +24,11 @@ CONDITIONS = {
     2: "non_character_scaffolded",  # Treatment 2: No Character + Scaffolding
     3: "direct_chat"                # Control: No Character, No Scaffolding
 }
+
+# Manual condition assignments (override random assignment)
+# Format: {'user_id': condition_number}
+# Leave empty dict for fully random assignment
+MANUAL_CONDITION_ASSIGNMENTS = {}
 
 
 
@@ -46,7 +52,17 @@ SESSIONS = {
         'order': 2,
         'description': 'Learn about recursive functions in Java',
         'requires_completion': 'session_1'  # Must complete ArrayList first
-    }
+    },
+    'session_3': {
+            'id': 'queue',
+            'name': 'Queue',
+            'start_date': SESSION_3_START,
+            'topic_key': 'queue',
+            'difficulty': 'medium',
+            'order': 3,
+            'description': 'Learn about queues and priority queues in Java',
+            'requires_completion': 'session_1'  # Must complete ArrayList first (Recursion optional)
+        }
 }
 
 # Data Collection
@@ -91,6 +107,6 @@ STUDY_INFO = {
     'title': 'Java Learning Research Study',
     'description': 'Help us understand how different teaching methods affect learning!',
     'institution': 'College of Charleston',
-    'estimated_time': '~18 minutes per session (2 sessions total)',
-    'contact': 'researcher@cofc.edu'
+    'estimated_time': '~18 minutes per session (3 sessions total)',
+    'contact': 'williamsa17@g.cofc.edu'
 }

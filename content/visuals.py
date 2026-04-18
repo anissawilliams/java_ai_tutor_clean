@@ -64,7 +64,60 @@ Final:
 
 Each call waits on the call stack until the base case returns!
 ```
+""",
+
+        'queue': """
+```
+QUEUE - First In, First Out (FIFO)
+
+The Coffee Shop Line:
+  FRONT                              BACK
+    ↓                                  ↓
+  ┌─────┬─────┬─────┬─────┐
+  │Alice│ Bob │Carol│Dave │  ← Everyone waits their turn
+  └─────┴─────┴─────┴─────┘
+    ↑                   ↑
+  poll()             offer()
+  (removes front)    (joins the back)
+  peek() → "Alice"   (look at front WITHOUT removing)
+
+  poll() → "Alice"   (she was first in line)
+
+  After poll():
+  ┌─────┬─────┬─────┐
+  │ Bob │Carol│Dave │
+  └─────┴─────┴─────┘
+    ↑               ↑
+  FRONT            BACK
+
+  No cutting. No skipping. Fair and simple.
+
+─────────────────────────────────────────────
+
+PRIORITY QUEUE - The ER Triage Desk
+
+  Arrival order:  1.Sprain  2.Chest Pain  3.Cold  4.Bleeding
+
+  But the PriorityQueue reorders by urgency:
+
+  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐
+  │ Chest Pain │  │  Bleeding  │  │   Sprain   │  │    Cold    │
+  │ priority=1 │  │ priority=2 │  │ priority=3 │  │ priority=4 │
+  │ (critical) │  │  (urgent)  │  │  (moderate) │  │   (minor)  │
+  └────────────┘  └────────────┘  └────────────┘  └────────────┘
+        ↑
+  poll() always takes
+  the highest priority
+  (lowest number) first
+
+  Arrival order IGNORED — priority wins!
+
+  Java default: min-heap → smallest value exits first
+  PriorityQueue<Integer> pq = new PriorityQueue<>();
+  pq.offer(50); pq.offer(10); pq.offer(30);
+  pq.poll() → 10   (not 50, even though 50 arrived first!)
+```
 """
     }
-    
+
     return visuals.get(topic_key, "")

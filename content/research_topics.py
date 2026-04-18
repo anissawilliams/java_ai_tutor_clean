@@ -1,13 +1,14 @@
 """
 Research Topics
-ArrayList and Recursion content for the study
+ArrayList, Recursion, and Queue & Priority Queue content
 Updated with Professor's "Stop Sign" and "Suitcase" methodologies
+Bug fixes: self-answering pattern and reflection loop corrected across all topics
 """
 
 from dataclasses import dataclass
 from typing import List, Dict
 
-@dataclass
+
 # content/research_topics.py
 
 class ResearchTopic:
@@ -88,45 +89,59 @@ ARRAYLIST_TOPIC = ResearchTopic(
         "initial_metaphor": (
             "Start with this metaphor:\n"
             "\"{metaphor_prompt}\"\n"
-            "Then ask the student what this reminds them of from their own life."
+            "Then ask the student what this reminds them of from their own life.\n"
+            "STOP. Do NOT continue. Wait for their response."
         ),
         "student_metaphor": (
             "1. Briefly acknowledge the student's metaphor or example.\n"
             "2. Pivot to the conflict: {agent_crisis}\n"
-            "3. Ask: 'Ready to see how this works visually?'"
+            "3. Ask: 'Ready to see how this works visually?'\n"
+            "STOP. Do NOT answer or explain further. Wait for the student."
         ),
         "visual_diagram": (
             "The visual was already shown. Do NOT show it again.\n"
-            "Ask ONE question: 'What part of this diagram is most helpful?'\n"
-            "Listen to their answer, then move forward. Keep response under 50 words."
+            "Ask ONE question only: 'What part of this diagram is most helpful?'\n"
+            "STOP. Wait for their answer. Keep your response under 50 words total."
         ),
         "code_structure": (
-            "Show the RESIZE method - the internal mechanism.\n"
+            "Show the RESIZE method — the internal mechanism.\n"
             "Highlight the copy loop: for (int i = 0; i < size; i++)\n"
-            "Explain: This is O(n) - every element must be copied.\n"
-            "Ask: 'If we have 1000 elements, how expensive is this copy?'\n"
-            "Do NOT show usage code. Show the INTERNAL implementation."
+            "Explain: This is O(n) — every element must be copied.\n"
+            "Then ask ONE question: 'If we have 1000 elements, how expensive is this copy?'\n"
+            "STOP. Do NOT answer. Wait for the student.\n"
+            "Do NOT show usage code. Show the INTERNAL implementation only."
         ),
         "code_usage": (
-            "NOW show usage code:\n"
+            "Show usage code:\n"
             "ArrayList<String> items = new ArrayList<>();\n"
             "items.add(\"A\");\n"
-            "Explain that resize happens automatically behind the scenes.\n"
-            "Ask: 'What happens performance-wise when we add 1000 items?'\n"
+            "Briefly explain that resize happens automatically behind the scenes.\n"
+            "Then ask ONE question: 'What happens performance-wise when we add 1000 items?'\n"
+            "STOP. Do NOT answer. Wait for the student.\n"
             "Do NOT re-explain resizing. Student already knows this."
         ),
         "practice": (
             "Ask ONE practice question about when resizing occurs.\n"
             "Example: 'If capacity is 8 and size is 7, what happens when we add 2 elements?'\n"
-            "Give brief feedback. Move to reflection quickly."
+            "STOP. Wait for their answer before giving any feedback.\n"
+            "Give brief feedback only after they respond. Then move to reflection."
         ),
         "reflection": (
-            "Ask student to summarize what they learned in 1-2 sentences.\n"
-            "Key point: ArrayList feels infinite but has O(n) resize cost.\n"
-            "This is the final step - wrap up concisely."
+            "Ask the student to summarize what they learned in 1-2 sentences.\n"
+            "STOP. Wait for their response.\n"
+            "When they respond, accept ANY reasonable summary that includes:\n"
+            "  - ArrayList can grow dynamically, AND\n"
+            "  - resizing has a cost (O(n) copy).\n"
+            "If their summary covers both ideas even loosely, affirm it and END the session.\n"
+            "Do NOT ask them to summarize again after they already have.\n"
+            "Do NOT repeat the closing question.\n"
+            "Do NOT ask for more detail.\n"
+            "Once confirmed, say something like: 'Exactly right. Great work today!' and stop."
         ),
     }
 )
+
+
 # -------------------------------------------------------------------------
 # TOPIC 2: RECURSION (The Stop Sign / Base Case)
 # -------------------------------------------------------------------------
@@ -165,60 +180,190 @@ RECURSION_TOPIC = ResearchTopic(
         "initial_metaphor": (
             "Start with a simple metaphor for recursion, such as walking down a "
             "staircase one step at a time until you reach the bottom.\n"
-            "Use this to hint that there must be a final, simplest step where you stop."
+            "Use this to hint that there must be a final, simplest step where you stop.\n"
+            "Then ask the student if this reminds them of anything.\n"
+            "STOP. Do NOT continue. Wait for their response."
         ),
         "student_metaphor": (
             "1. Acknowledge the student's metaphor or example.\n"
             "2. Pivot to the crisis: {agent_crisis}\n"
-            "3. Ask: 'Ready to see how the call stack works visually?'"
+            "3. Ask: 'Ready to see how the call stack works visually?'\n"
+            "STOP. Do NOT answer or explain further. Wait for the student."
         ),
         "visual_diagram": (
             "The student has seen a visual diagram showing the recursive call stack.\n"
-            "1. Explain how each recursive call gets added to the stack, building up.\n"
-            "2. Point out how the base case stops the recursion.\n"
-            "3. Show how the stack unwinds, each call returning its value.\n"
-            "4. Ask: 'Can you see how the stack builds up and then unwinds?'"
+            "Briefly explain in 2-3 sentences:\n"
+            "  - Each recursive call gets added to the stack, building up.\n"
+            "  - The base case stops the recursion.\n"
+            "  - The stack then unwinds, each call returning its value.\n"
+            "Then ask ONE question: 'Can you see how the stack builds up and then unwinds?'\n"
+            "STOP. Wait for the student's response before moving on."
         ),
         "code_structure": (
-            "1. Show a recursive factorial function and first present it WITHOUT "
-            "a base case to create the 'crisis'.\n"
-            "2. Ask: 'If I call this version, when does it stop calling itself?'\n"
-            "3. Then introduce the proper structure:\n"
-            "   FUNCTION factorial(n):\n"
-            "       IF n == 1:\n"
-            "           RETURN 1           // Base Case (Stop Sign)\n"
-            "       ELSE:\n"
-            "           RETURN n * factorial(n - 1)  // Recursive Case\n"
-            "4. Emphasize the difference between the base case (stop sign) and "
-            "the recursive case (doing work and calling again)."
+            "Show a recursive factorial function WITHOUT a base case first.\n"
+            "Ask ONE question: 'If I call this version, when does it stop calling itself?'\n"
+            "STOP. Wait for the student's answer.\n"
+            "Only AFTER they respond: introduce the proper structure with the base case.\n"
+            "Do NOT pre-answer the question. Do NOT show the fix before they guess."
         ),
         "code_usage": (
-            "1. Ask: 'What happens if we remove or forget the base case?'\n"
-            "2. Explain that the call stack fills up with recursive calls, leading "
-            "to a stack overflow.\n"
-            "3. Ask them to identify which line is the base case and which is the "
-            "recursive case in the factorial example."
+            "Ask ONE question only: 'What happens if we remove or forget the base case?'\n"
+            "STOP. Do NOT answer. Do NOT explain. Do NOT ask any follow-up questions.\n"
+            "When the student answers — ANY answer mentioning infinite loop, stack overflow, "
+            "or never stopping — accept it immediately and move to the next step.\n"
+            "Do NOT repeat this question under any circumstances."
         ),
         "practice": (
-            "1. Review the student's attempt at writing or modifying a recursive function.\n"
-            "2. Help them clearly separate the base case from the recursive case.\n"
-            "3. Ensure that the recursive call always moves n closer to the base case "
-            "(for example, n - 1 in factorial)."
+            "Tell the student: 'Here is our factorial function with a base case.'\n"
+            "Show the code:\n"
+            "  def factorial(n):\n"
+            "      if n == 1:  # Base case\n"
+            "          return 1\n"
+            "      else:\n"
+            "          return n * factorial(n - 1)\n\n"
+            "Ask ONE question: 'Which line is the base case and which is the recursive case?'\n"
+            "STOP. Wait for their answer before giving any feedback.\n"
+            "After they answer, give brief confirmation and move to reflection."
         ),
         "reflection": (
-            "1. Ask: 'How does thinking in terms of a base case and recursive case "
-            "help you design recursive functions?'\n"
-            "2. Have them restate the role of the base case as the 'Stop Sign'.\n"
-            "3. Ask them to explain, in their own words, how the call stack fills "
-            "and then unwinds in the factorial example."
+            "Ask: 'How would you explain recursion to someone who has never seen it?'\n"
+            "STOP. Wait for their answer.\n"
+            "When they respond, accept ANY reasonable summary that includes:\n"
+            "  - a method calling itself, AND\n"
+            "  - a base case stopping the recursion.\n"
+            "If their summary covers both ideas even loosely, affirm it and END the session.\n"
+            "Do NOT ask them to summarize again after they already have.\n"
+            "Do NOT repeat the closing question.\n"
+            "Do NOT ask for more detail.\n"
+            "Once confirmed, say something like: 'Exactly right. Great work today!' and stop."
         ),
     }
 )
 
+
+# -------------------------------------------------------------------------
+# TOPIC 3: QUEUE & PRIORITY QUEUE (The Line / The ER)
+# -------------------------------------------------------------------------
+QUEUE_TOPIC = ResearchTopic(
+    key="queue",
+    name="Queue & Priority Queue",
+    difficulty="medium",
+    concept=(
+        "A Queue serves elements in arrival order (FIFO). A Priority Queue "
+        "breaks that rule — the highest-priority element always exits first, "
+        "regardless of when it arrived."
+    ),
+    key_points=[
+        "FIFO: First In, First Out — a regular Queue preserves arrival order.",
+        "offer() adds to the back; poll() removes from the front.",
+        "No random access — you can only interact with the front and back.",
+        "A Priority Queue ignores arrival order — priority wins.",
+        "Java's PriorityQueue uses a min-heap: smallest value exits first.",
+        "Custom ordering requires a Comparator to flip or define priority.",
+        "The crisis: what happens when arrival order isn't fair enough?",
+    ],
+    metaphor_prompt=(
+        "Think about a Queue like the line at a coffee shop — first in, first "
+        "out, nobody cuts. But a Priority Queue is like an ER triage desk. "
+        "It doesn't matter who arrived first. The most critical patient goes "
+        "back immediately, even if they walked in last."
+    ),
+    agent_crisis=(
+        "A regular Queue is fair by arrival order. But what if a low-priority "
+        "task is sitting at the front while a critical one just arrived? "
+        "Strict FIFO fails us. How do we serve the most important element "
+        "next, efficiently?"
+    ),
+    agent_solution=(
+        "For a regular Queue, Java's LinkedList gives O(1) offer() and poll() "
+        "with no shifting. For priority ordering, Java's PriorityQueue uses a "
+        "min-heap so poll() always returns the highest-priority element in O(log n)."
+    ),
+    code_focus=(
+        "Queue interface methods (offer, poll, peek) and PriorityQueue behavior — "
+        "default min-heap ordering and custom Comparators."
+    ),
+    instructions={
+        "initial_metaphor": (
+            "Start with this metaphor:\n"
+            "\"{metaphor_prompt}\"\n"
+            "Ask: 'Can you think of a real situation where arrival order is fair, "
+            "and another where priority should override it?'\n"
+            "STOP. Do NOT continue. Wait for their response."
+        ),
+        "student_metaphor": (
+            "1. Acknowledge the student's examples.\n"
+            "2. Pivot to the conflict: {agent_crisis}\n"
+            "3. Ask: 'Ready to see both structures side by side visually?'\n"
+            "STOP. Do NOT answer or explain further. Wait for the student."
+        ),
+        "visual_diagram": (
+            "The visual was already shown. Do NOT show it again.\n"
+            "Ask ONE question only: 'What's the key difference between the two "
+            "structures in terms of what exits first?'\n"
+            "STOP. Keep your response under 50 words. Wait for their answer."
+        ),
+        "code_structure": (
+            "Show the regular Queue code:\n"
+            "  Queue<String> line = new LinkedList<>();\n"
+            "  line.offer(\"Alice\");\n"
+            "  line.offer(\"Bob\");\n"
+            "  line.poll(); // 'Alice' — first in, first out\n\n"
+            "Note: unlike ArrayList, there is no get(index) — "
+            "you can only touch the front (Head) and back (Tail).\n\n"
+            "Then show PriorityQueue:\n"
+            "  PriorityQueue<Integer> pq = new PriorityQueue<>();\n"
+            "  pq.offer(5);\n"
+            "  pq.offer(1);\n"
+            "  pq.offer(3);\n"
+            "  pq.poll(); // returns 1 — not 5!\n\n"
+            "Ask ONE question: 'Why did 1 come out even though 5 was added first?'\n"
+            "STOP. Do NOT answer. Wait for the student."
+        ),
+        "code_usage": (
+            "TERMINOLOGY: Always use Java method names — offer(), poll(), peek(). "
+            "Never say 'enqueue' or 'dequeue' — students must learn the actual API.\n\n"
+            "Show the custom Comparator example:\n"
+            "  PriorityQueue<int[]> tasks = new PriorityQueue<>(\n"
+            "      (a, b) -> a[1] - b[1]\n"
+            "  );\n"
+            "  tasks.offer(new int[]{1, 3});\n"
+            "  tasks.offer(new int[]{2, 1});\n"
+            "  tasks.poll(); // task 2 wins — priority 1\n\n"
+            "Ask ONE question: 'When would you use a regular Queue vs. a PriorityQueue?'\n"
+            "STOP. Do NOT answer. Wait for the student."
+        ),
+        "practice": (
+            "TERMINOLOGY: Always use Java method names — offer(), poll(), peek(). "
+            "Never say 'enqueue' or 'dequeue' — students must learn the actual API.\n\n"
+            "Ask ONE practice question:\n"
+            "'If you add 10, 4, 7, 2 to a PriorityQueue and call poll() "
+            "three times, what comes out and in what order? Would a regular "
+            "Queue give you the same result? Why or why not?'\n"
+            "STOP. Wait for their answer before giving any feedback."
+        ),
+        "reflection": (
+            "Ask the student to summarize both structures in 2-3 sentences.\n"
+            "STOP. Wait for their response.\n"
+            "When they respond, accept ANY reasonable summary that includes:\n"
+            "  - Queue = FIFO / arrival order, AND\n"
+            "  - PriorityQueue = priority wins / arrival order ignored.\n"
+            "If their summary covers both ideas even loosely, affirm it and END the session.\n"
+            "Do NOT ask them to summarize again after they already have.\n"
+            "Do NOT repeat the closing question.\n"
+            "Do NOT ask for more detail.\n"
+            "Once confirmed, say something like: 'Exactly right. Great work today!' and stop."
+        ),
+    }
+)
+
+
 RESEARCH_TOPICS = {
     'arraylist': ARRAYLIST_TOPIC,
-    'recursion': RECURSION_TOPIC
+    'recursion': RECURSION_TOPIC,
+    'queue': QUEUE_TOPIC
 }
+
 
 def get_research_topic(topic_key: str) -> ResearchTopic:
     if topic_key not in RESEARCH_TOPICS:

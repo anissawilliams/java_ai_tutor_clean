@@ -78,12 +78,10 @@ ARRAYLIST_QUIZ = [
             "When designing high-performance math computations that require storing primitive data types without the overhead of autoboxing.",
             "When handling business logic for flexibility with an unknown or dynamically changing size (such as managing items in a user's e-commerce shopping cart) and needing built-in functionality like sorting or filtering.",
             "When storing a fixed number of elements whose maximum size is known at compile time and will not change, such as the 12 months of the year or 7 days of the week."
-        ]
-        ,
+        ],
         correct_index=2,
         explanation="ArrayList is more flexible and efficient than a traditional array.",
         difficulty=4
-
     )
 ]
 
@@ -183,9 +181,79 @@ RECURSION_QUIZ = [
 ]
 
 
+# Queue & Priority Queue Quiz Questions
+QUEUE_QUIZ = [
+    QuizQuestion(
+        question="What is the primary acronym used to describe Queue behavior?",
+        options=[
+            "LIFO (Last-In, First-Out)",
+            "FIFO (First-In, First-Out)",
+            "FILO (First-In, Last-Out)",
+            "LILO (Last-In, Last-Out)"
+        ],
+        correct_index=1,
+        explanation="Queues follow FIFO — First-In, First-Out. The first element added is always the first one removed, just like a line at a coffee shop.",
+        difficulty=1  # Easy - basic concept
+    ),
+
+    QuizQuestion(
+        question="In a Priority Queue, which element is always the first to be removed?",
+        options=[
+            "The element that was added first",
+            "The element that was added last",
+            "The element with the highest priority (lowest value by default)",
+            "A randomly selected element"
+        ],
+        correct_index=2,
+        explanation="A PriorityQueue always removes the highest-priority element first. By default in Java, this means the smallest numeric value (min-heap).",
+        difficulty=1  # Easy - core distinction
+    ),
+
+    QuizQuestion(
+        question="Unlike an ArrayList, which operation is strictly forbidden in a standard Queue?",
+        options=[
+            "Adding an element to the back",
+            "Removing the front element",
+            "Accessing an element by index",
+            "Checking if the Queue is empty"
+        ],
+        correct_index=2,
+        explanation="A Queue only allows interaction at the front and back. Random access by index (like get(2)) is not supported — that would break the FIFO contract.",
+        difficulty=2  # Medium - structural constraint
+    ),
+
+    QuizQuestion(
+        question="Where does offer() place a new element in a Queue?",
+        options=[
+            "At the front of the Queue",
+            "At a random position",
+            "At the back (rear) of the Queue",
+            "In sorted order"
+        ],
+        correct_index=2,
+        explanation="offer() always adds to the back of the Queue. Elements exit from the front — that's what makes it FIFO (First-In, First-Out).",
+        difficulty=2  # Medium - structural understanding
+    ),
+
+    QuizQuestion(
+        question="If you insert 50, 10, and 30 into a Java PriorityQueue (default ordering) and call poll(), which value is returned?",
+        options=[
+            "50 — it was inserted first",
+            "30 — it is the middle value",
+            "10 — it has the highest priority (smallest value)",
+            "The result is unpredictable"
+        ],
+        correct_index=2,
+        explanation="Java's default PriorityQueue is a min-heap — poll() always returns the smallest value regardless of insertion order. 10 exits first even though 50 was inserted first.",
+        difficulty=3  # Hard - requires tracing PriorityQueue behavior
+    )
+]
+
+
 # Use 5 questions for each topic
 ARRAYLIST_QUIZ_FINAL = ARRAYLIST_QUIZ[:5]
 RECURSION_QUIZ_FINAL = RECURSION_QUIZ[:5]
+QUEUE_QUIZ_FINAL = QUEUE_QUIZ[:5]
 
 
 def get_quiz(topic_key: str) -> List[QuizQuestion]:
@@ -194,6 +262,8 @@ def get_quiz(topic_key: str) -> List[QuizQuestion]:
         return ARRAYLIST_QUIZ_FINAL
     elif topic_key == 'recursion':
         return RECURSION_QUIZ_FINAL
+    elif topic_key == 'queue':
+        return QUEUE_QUIZ_FINAL
     else:
         return []
 
@@ -203,7 +273,7 @@ def score_quiz(topic_key: str, user_answers: dict) -> tuple:
     Score a quiz.
 
     Args:
-        topic_key: 'arraylist' or 'recursion'
+        topic_key: 'arraylist', 'recursion', or 'queue'
         user_answers: dict mapping question index to selected answer text
 
     Returns:
@@ -230,5 +300,5 @@ def score_quiz(topic_key: str, user_answers: dict) -> tuple:
             'explanation': question.explanation,
             'difficulty': question.difficulty  # Include difficulty in results
         })
-    
+
     return score, len(quiz), results

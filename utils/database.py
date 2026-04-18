@@ -150,25 +150,33 @@ def get_next_session(user_id: str) -> Optional[str]:
     """
     Determine which session the user should do next.
     
-    Returns: 'arraylist', 'recursion', or None if all complete
+    Dynamically reads from SESSIONS config so new topics
+    are picked up automatically.
+
+    Returns: session id (e.g. 'arraylist', 'recursion', 'queue') or None if all complete
     """
+    from utils.config import SESSIONS
+
     try:
-        # Check ArrayList
-        arraylist_status = get_session_status(user_id, 'arraylist')
-        if arraylist_status != 'completed':
-            return 'arraylist'
-        
-        # Check Recursion
-        recursion_status = get_session_status(user_id, 'recursion')
-        if recursion_status != 'completed':
-            return 'recursion'
-        
-        # Both complete
+        # Sort sessions by their 'order' field
+        sorted_sessions = sorted(
+            SESSIONS.values(),
+            key=lambda s: s['order']
+        )
+
+        for session_config in sorted_sessions:
+            session_id = session_config['id']
+            status = get_session_status(user_id, session_id)
+
+            if status != 'completed':
+                return session_id
+
+        # All sessions complete
         return None
-        
+
     except Exception as e:
         st.error(f"Error getting next session: {e}")
-        return 'arraylist'  # Default to first session
+        return None
 
 
 def get_all_users() -> Dict:
@@ -186,13 +194,13 @@ def get_user_condition(user_id: str) -> int:
     try:
         ref = db.reference(f'users/{user_id}')
         user_data = ref.get()
-        
+
         if user_data and 'condition' in user_data:
             return user_data['condition']
-        
+
         # If no condition, something went wrong
         return 1
-        
+
     except Exception as e:
         st.error(f"Error getting user condition: {e}")
         return 1
@@ -201,24 +209,24 @@ def get_user_condition(user_id: str) -> int:
 def export_data_to_dict() -> List[Dict]:
     """
     Export all data for analysis.
-    
+
     Returns list of dicts, one per session completion.
     """
     try:
         all_users = get_all_users()
         export_data = []
-        
+
         for user_id, user_data in all_users.items():
             email = user_data.get('email', '')
             condition = user_data.get('condition', 0)
             condition_name = user_data.get('condition_name', '')
-            
+
             sessions = user_data.get('sessions', {})
-            
+
             for session_id, session_data in sessions.items():
                 if session_data.get('status') == 'completed':
                     messages = session_data.get('messages', [])
-                    
+
                     row = {
                         'user_id': user_id,
                         'email': email,
@@ -239,9 +247,9 @@ def export_data_to_dict() -> List[Dict]:
                         'survey_responses': str(session_data.get('survey_responses', {})),
                         'completed': True
                     }
-                    
+
                     export_data.append(row)
-        
+
         return export_data
 
     except Exception as e:

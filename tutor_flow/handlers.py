@@ -164,6 +164,15 @@ def _show_visual_diagram(flow, topic, session_id):
             "- **Unwinding**: Each frame returns its value back up the chain\n\n"
             "Can you see how the stack builds up and then unwinds?"
         )
+    elif topic.key == 'queue':
+        walkthrough = (
+            "Let me walk you through this:\n"
+            "- **Queue (top)**: Fair line — first in, first out. `poll()` always takes from the front, `offer()` adds to the back\n"
+            "- **peek()**: Lets you look at who's next without removing them\n"
+            "- **Priority Queue (bottom)**: Arrival order is thrown out — the most urgent item jumps to the front\n"
+            "- **Min-heap**: Java's default — smallest number = highest priority\n\n"
+            "Does this diagram help you see the difference between the two?"
+        )
     else:
         walkthrough = "Does this diagram help you understand how it works?"
 
